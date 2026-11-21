@@ -13,19 +13,6 @@ python3 -m http.server 8000
 # http://localhost:8000
 ```
 
-## Publicar gratis
-
-**Vercel**
-1. Sube esta carpeta a un repositorio de GitHub.
-2. En vercel.com → *Add New Project* → importa el repositorio.
-3. Framework preset: **Other**. Sin comando de build. *Deploy*.
-
-O desde la terminal: `npx vercel` dentro de la carpeta.
-
-**Netlify**: arrastra la carpeta a app.netlify.com/drop.
-
-**GitHub Pages**: Settings → Pages → *Deploy from branch* → `main` / root.
-
 ## Archivos
 
 - `index.html` – estructura de la página
