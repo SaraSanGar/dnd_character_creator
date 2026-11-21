@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const STEPS = ["Nombre", "Raza", "Clase", "Trasfondo", "Historia", "Pergamino"];
+  const STEPS = ["Nombre", "Raza", "Clase", "Conjuros", "Trasfondo", "Historia", "Pergamino"];
+  const STEP = { name: 0, race: 1, cls: 2, spells: 3, bg: 4, story: 5, sheet: 6 };
   const STORAGE_KEY = "forja-heroes-v1";
   const STORY_PROMPTS = [
     "¿De dónde viene tu personaje?",
@@ -12,7 +13,7 @@
     "¿Qué sueña con conseguir?"
   ];
 
-  const blank = () => ({ step: 0, name: "", player: "", race: null, subrace: null, raceChoice: null, cls: null, equip: [], bg: null, story: "" });
+  const blank = () => ({ step: 0, name: "", player: "", race: null, subrace: null, raceChoice: null, cls: null, equip: [], spells: { cantrips: [], lvl1: [], race: null }, bg: null, story: "" });
   let state = load() || blank();
 
   const $ = (sel) => document.querySelector(sel);
@@ -37,11 +38,12 @@
   /* ---------- Stepper ---------- */
   function stepDone(i) {
     switch (i) {
-      case 0: return state.name.trim().length > 0;
-      case 1: return raceComplete();
-      case 2: return !!state.cls;
-      case 3: return !!state.bg;
-      case 4: return state.story.trim().length > 0;
+      case STEP.name: return state.name.trim().length > 0;
+      case STEP.race: return raceComplete();
+      case STEP.cls: return !!state.cls;
+      case STEP.spells: return !!state.cls && spellsComplete();
+      case STEP.bg: return !!state.bg;
+      case STEP.story: return state.story.trim().length > 0;
       default: return false;
     }
   }
@@ -64,7 +66,8 @@
     state.step = Math.max(0, Math.min(STEPS.length - 1, i));
     save();
     document.querySelectorAll(".step").forEach((el) => el.classList.toggle("active", +el.dataset.step === state.step));
-    if (state.step === 5) renderSheet();
+    if (state.step === STEP.spells) renderSpells();
+    if (state.step === STEP.sheet) renderSheet();
     renderStepper();
     renderFooter();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -74,9 +77,9 @@
     $("#prevBtn").style.visibility = state.step === 0 ? "hidden" : "visible";
     const next = $("#nextBtn");
     next.style.visibility = state.step === STEPS.length - 1 ? "hidden" : "visible";
-    const canNext = state.step === 4 || stepDone(state.step);
+    const canNext = state.step === STEP.story || state.step === STEP.spells || stepDone(state.step);
     next.disabled = !canNext;
-    next.textContent = state.step === 4 ? "Ver pergamino →" : "Siguiente →";
+    next.textContent = state.step === STEP.story ? "Ver pergamino →" : "Siguiente →";
 
     const r = findRace(state.race), c = findClass(state.cls), b = findBg(state.bg);
     const parts = [];
@@ -256,14 +259,182 @@
     const { kind, id } = modalCtx;
     if (kind === "race") {
       state.race = id; state.subrace = modalCtx.subrace || null; state.raceChoice = modalCtx.choice || null;
+      if (!raceSpellPick()) state.spells.race = null;
     }
-    if (kind === "class") { state.cls = id; state.equip = modalCtx.equip.slice(); }
+    if (kind === "class") {
+      if (state.cls !== id) { state.spells.cantrips = []; state.spells.lvl1 = []; }
+      state.cls = id; state.equip = modalCtx.equip.slice();
+    }
     if (kind === "bg") state.bg = id;
     save();
     closeModal();
     renderGrids();
     renderStepper();
     renderFooter();
+  }
+
+  /* ---------- Conjuros ---------- */
+  const spellInfo = () => (typeof CLASS_SPELLCASTING !== "undefined" ? CLASS_SPELLCASTING[state.cls] : null);
+
+  // Truco extra por raza (alto elfo: un truco de la lista de mago)
+  function raceSpellPick() {
+    if (state.race === "elf" && state.subrace === "high") {
+      return { label: "Truco de alto elfo", hint: "Conoces un truco a tu elección de la lista de mago. Usas Inteligencia para lanzarlo.", list: CLASS_SPELL_LISTS.wizard[0], max: 1 };
+    }
+    return null;
+  }
+
+  function pickConfig() {
+    const info = spellInfo();
+    const groups = [];
+    if (info && !info.later) {
+      const lists = CLASS_SPELL_LISTS[state.cls];
+      groups.push({ key: "cantrips", title: "Trucos", hint: `Conoces ${info.cantrips} trucos. Se lanzan a voluntad, sin gastar espacios.`, list: lists[0], max: info.cantrips, exact: true });
+      const lvlHint = info.mode === "known" ? `Elige ${info.max}.`
+        : info.mode === "spellbook" ? "Elige 6 para tu libro de conjuros."
+        : `Elige entre 1 y ${info.max} según tu modificador de ${info.ability} (pregunta a tu DM si no lo sabes).`;
+      groups.push({ key: "lvl1", title: info.mode === "spellbook" ? "Libro de conjuros (nivel 1)" : "Conjuros de nivel 1", hint: lvlHint, list: lists[1], max: info.max, exact: info.mode !== "prepared" });
+    }
+    const rp = raceSpellPick();
+    if (rp) groups.push({ key: "race", title: rp.label, hint: rp.hint, list: rp.list, max: rp.max, exact: true });
+    return groups;
+  }
+
+  function picked(key) {
+    if (key === "race") return state.spells.race ? [state.spells.race] : [];
+    return state.spells[key] || [];
+  }
+
+  function spellsComplete() {
+    return pickConfig().every((g) => {
+      const n = picked(g.key).length;
+      return g.exact ? n === g.max : n >= 1 && n <= g.max;
+    });
+  }
+
+  function spellCardHTML(key, slug, on, full) {
+    const sp = SPELLS[slug];
+    const tags = [sp.school, sp.time, sp.range, sp.dur];
+    return `<button type="button" class="spell ${on ? "selected" : ""} ${!on && full ? "locked" : ""}" data-pick="${key}" data-slug="${slug}" data-search="${esc((sp.es + " " + sp.en).toLowerCase())}" aria-pressed="${on}">
+      <span class="spell-check" aria-hidden="true">${on ? "✦" : ""}</span>
+      <span class="spell-name">${esc(sp.es)}</span>
+      <span class="spell-en">${esc(sp.en)}${sp.src !== "PHB" ? " · " + esc(sp.src) : ""}</span>
+      <span class="spell-tags">${tags.map((t) => `<span>${esc(t)}</span>`).join("")}${sp.conc ? '<span class="tag-c">Concentración</span>' : ""}${sp.ritual ? '<span class="tag-r">Ritual</span>' : ""}</span>
+      <span class="spell-desc">${esc(sp.d)}</span>
+    </button>`;
+  }
+
+  function renderSpells() {
+    const box = $("#spellPicker");
+    const c = findClass(state.cls);
+    const info = spellInfo();
+    const groups = pickConfig();
+    let html = "";
+
+    if (!c) {
+      $("#spellIntro").textContent = "Primero elige una clase.";
+      box.innerHTML = `<div class="scroll-panel"><p class="hint" style="text-align:center">Vuelve al paso de clase y elige una para ver sus conjuros.</p></div>`;
+      return;
+    }
+    if (!info || info.later) {
+      $("#spellIntro").textContent = info?.later || `Los ${c.name.toLowerCase()}s no lanzan conjuros de clase a nivel 1.`;
+      if (!groups.length) {
+        box.innerHTML = `<div class="scroll-panel"><p style="text-align:center;margin:0">⚔ ${esc(info?.later || "Tu clase no usa conjuros.")} Puedes pasar al siguiente paso.</p>
+          <p class="hint" style="text-align:center">Si tu raza te da algún conjuro (como el Legado infernal del tiefling), ya aparece en sus rasgos.</p></div>`;
+        return;
+      }
+    } else {
+      $("#spellIntro").textContent = `Como ${c.name.toLowerCase()}, lanzas conjuros con ${info.ability}.`;
+      html += `<div class="scroll-panel spell-rules">
+        <dl class="mini-dl">
+          <dt>Característica</dt><dd>${esc(info.ability)}</dd>
+          <dt>Espacios de nivel 1</dt><dd>${info.slots}</dd>
+          <dt>Trucos</dt><dd>${info.cantrips}</dd>
+        </dl>
+        <p class="hint">${esc(info.rule)}</p>
+      </div>`;
+    }
+
+    groups.forEach((g) => {
+      const sel = picked(g.key);
+      const full = sel.length >= g.max;
+      html += `<section class="spell-group" data-group="${g.key}">
+        <div class="spell-group-head">
+          <div><h3>${esc(g.title)}</h3><p class="hint">${esc(g.hint)}</p></div>
+          <div class="spell-count ${(g.exact ? sel.length === g.max : sel.length >= 1) ? "ok" : ""}">${sel.length} / ${g.max}</div>
+        </div>
+        ${g.list.length > 8 ? `<input type="search" class="spell-search" data-search-for="${g.key}" placeholder="Buscar conjuro…" aria-label="Buscar en ${esc(g.title)}">` : ""}
+        <div class="spell-grid">${g.list.map((slug) => spellCardHTML(g.key, slug, sel.includes(slug), full)).join("")}</div>
+      </section>`;
+    });
+    box.innerHTML = html;
+  }
+
+  function toggleSpell(key, slug) {
+    const g = pickConfig().find((x) => x.key === key);
+    if (!g) return;
+    if (key === "race") {
+      state.spells.race = state.spells.race === slug ? null : slug;
+    } else {
+      const arr = state.spells[key];
+      const i = arr.indexOf(slug);
+      if (i >= 0) arr.splice(i, 1);
+      else if (arr.length < g.max) arr.push(slug);
+      else return;
+    }
+    save();
+    // Actualiza solo esa sección para no perder la búsqueda ni el scroll
+    const sec = document.querySelector(`.spell-group[data-group="${key}"]`);
+    const sel = picked(key);
+    const full = sel.length >= g.max;
+    sec.querySelectorAll(".spell").forEach((b) => {
+      const on = sel.includes(b.dataset.slug);
+      b.classList.toggle("selected", on);
+      b.classList.toggle("locked", !on && full);
+      b.setAttribute("aria-pressed", on);
+      b.querySelector(".spell-check").textContent = on ? "✦" : "";
+    });
+    const cnt = sec.querySelector(".spell-count");
+    cnt.textContent = `${sel.length} / ${g.max}`;
+    cnt.classList.toggle("ok", g.exact ? sel.length === g.max : sel.length >= 1);
+    renderStepper();
+  }
+
+  function sheetSpellsHTML() {
+    const info = spellInfo();
+    const cls = info && !info.later ? state.spells : null;
+    const race = raceSpellPick() && state.spells.race ? state.spells.race : null;
+    if (!cls && !race) return "";
+    const item = (slug) => {
+      const sp = SPELLS[slug];
+      return `<p class="trait"><b>${esc(sp.es)}</b> <i>(${esc(sp.en)})</i> — ${esc(sp.time)} · ${esc(sp.range)} · ${esc(sp.dur)}. ${esc(sp.d)}</p>`;
+    };
+    const cantrips = (cls ? cls.cantrips : []).slice();
+    let head = "";
+    if (cls) {
+      head = `<dl class="spell-dl">
+          <dt>Característica</dt><dd>${esc(info.ability)}</dd>
+          <dt>Espacios de nivel 1</dt><dd>${info.slots}</dd>
+          <dt>CD de salvación</dt><dd>8 + bonificador de competencia (+2) + mod. de ${esc(info.ability)}</dd>
+          <dt>Ataque de conjuro</dt><dd>bonificador de competencia (+2) + mod. de ${esc(info.ability)}</dd>
+        </dl>`;
+    }
+    return `<div class="sheet-section sheet-spells">
+        <h4>Conjuros</h4>
+        ${head}
+        <div class="sheet-cols" style="margin-top:8px">
+          <div>
+            <div class="sheet-sub">Trucos</div>
+            ${cantrips.map(item).join("")}
+            ${race ? `<div class="sheet-sub">Truco de alto elfo (Inteligencia)</div>${item(race)}` : ""}
+            ${!cantrips.length && !race ? '<p class="trait"><i>Sin elegir</i></p>' : ""}
+          </div>
+          <div>
+            ${cls ? `<div class="sheet-sub">${info.mode === "spellbook" ? "Libro de conjuros (nivel 1)" : info.mode === "prepared" ? "Conjuros preparados (nivel 1)" : "Conjuros conocidos (nivel 1)"}</div>
+            ${cls.lvl1.map(item).join("") || '<p class="trait"><i>Sin elegir</i></p>'}` : ""}
+          </div>
+        </div>
+      </div>`;
   }
 
   /* ---------- Equipo inicial ---------- */
@@ -353,6 +524,7 @@
         <div>${raceBlock}</div>
         <div>${classBlock}${bgBlock}</div>
       </div>
+      ${sheetSpellsHTML()}
       <div class="sheet-section" style="margin-top:6px">
         <h4>Historia</h4>
         <div class="sheet-story">${esc(state.story.trim()) || "<i>Aún por escribir…</i>"}</div>
@@ -366,6 +538,7 @@
     if (!state.name.trim()) missing.push("nombre");
     if (!raceComplete()) missing.push("raza");
     if (!state.cls) missing.push("clase");
+    if (state.cls && !spellsComplete()) missing.push("conjuros");
     if (!state.bg) missing.push("trasfondo");
     if (!state.story.trim()) missing.push("historia");
     const note = $("#missingNote");
@@ -441,7 +614,7 @@
     $("#charName").addEventListener("input", (e) => { state.name = e.target.value; save(); renderStepper(); renderFooter(); });
     $("#playerName").addEventListener("input", (e) => { state.player = e.target.value; save(); });
     $("#story").addEventListener("input", (e) => { state.story = e.target.value; save(); updateCount(); renderStepper(); });
-    $("#charName").addEventListener("keydown", (e) => { if (e.key === "Enter" && stepDone(0)) goTo(1); });
+    $("#charName").addEventListener("keydown", (e) => { if (e.key === "Enter" && stepDone(STEP.name)) goTo(STEP.race); });
 
     $("#storyPrompts").innerHTML = STORY_PROMPTS.map((p) => `<li tabindex="0">${esc(p)}</li>`).join("");
     $("#storyPrompts").addEventListener("click", (e) => {
@@ -478,6 +651,19 @@
     $("#modalChoose").addEventListener("click", chooseFromModal);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#modal").hidden) closeModal(); });
 
+    $("#spellPicker").addEventListener("click", (e) => {
+      const b = e.target.closest(".spell");
+      if (b) toggleSpell(b.dataset.pick, b.dataset.slug);
+    });
+    $("#spellPicker").addEventListener("input", (e) => {
+      const inp = e.target.closest(".spell-search");
+      if (!inp) return;
+      const q = inp.value.trim().toLowerCase();
+      document.querySelectorAll(`.spell-group[data-group="${inp.dataset.searchFor}"] .spell`).forEach((b) => {
+        b.hidden = q && !b.dataset.search.includes(q);
+      });
+    });
+
     $("#downloadPdf").addEventListener("click", downloadPdf);
     $("#resetAll").addEventListener("click", () => {
       if (!confirm("¿Seguro que quieres borrar este personaje y empezar de cero?")) return;
@@ -485,7 +671,7 @@
       $("#charName").value = ""; $("#playerName").value = ""; $("#story").value = ""; updateCount();
       renderGrids(); goTo(0);
     });
-    window.addEventListener("resize", () => { if (state.step === 5) fitSheet(); });
+    window.addEventListener("resize", () => { if (state.step === STEP.sheet) fitSheet(); });
   }
 
   function updateCount() { $("#storyCount").textContent = `${$("#story").value.length} / 4000`; }

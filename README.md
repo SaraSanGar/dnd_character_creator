@@ -1,6 +1,6 @@
 # Forja de Héroes
 
-Web sencilla para crear un personaje de D&D 5e: nombre, raza, clase, trasfondo e historia, con descarga en PDF.
+Web sencilla para crear un personaje de D&D 5e: nombre, raza, clase (con equipo inicial), conjuros, trasfondo e historia, con descarga en PDF.
 
 Es una web estática (HTML + CSS + JS, sin compilación). Datos sacados de [dnd5e.wikidot.com](https://dnd5e.wikidot.com) y traducidos al castellano, en [data.js](data.js).
 
@@ -30,5 +30,6 @@ O desde la terminal: `npx vercel` dentro de la carpeta.
 
 - `index.html` – estructura de la página
 - `styles.css` – estética de pergamino
-- `data.js` – razas, clases y trasfondos
+- `data.js` – razas, clases, trasfondos y equipo inicial
+- `spells.js` – trucos y conjuros de nivel 1 por clase, y reglas de lanzamiento de conjuros
 - `app.js` – lógica del asistente, cartas y PDF (html2pdf.js)
