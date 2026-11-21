@@ -8,12 +8,12 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=IM+Fell+English:ital@0;1&family=Gloria+Hallelujah&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Patrick+Hand&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="site-header">
-    <div class="ornament">❦</div>
+    <div class="ornament">✎ ✦ 🎲</div>
     <h1>Forja de Héroes</h1>
     <p class="tagline">Un pequeño grimorio para crear tu personaje de Dungeons &amp; Dragons</p>
   </header>
@@ -86,11 +86,7 @@
     <section class="step" data-step="6">
       <div class="step-intro">
         <h2>Tu retrato</h2>
-        <p class="hint">Haz tu retrato en Picrew y súbelo aquí, o dibújalo con nuestro creador.</p>
-        <div class="portrait-mode" role="tablist">
-          <button type="button" data-pmode="picrew" class="active">Picrew</button>
-          <button type="button" data-pmode="draw">Dibujar aquí</button>
-        </div>
+        <p class="hint">Crea tu retrato en Picrew (o usa cualquier dibujo tuyo) y súbelo aquí. Saldrá en tu ficha.</p>
       </div>
       <div class="picrew-panel" id="picrewPanel">
         <div class="picrew-preview" id="picrewPreview"></div>
@@ -101,20 +97,6 @@
           <li><label class="btn btn-ghost light upload-btn">⬆ Subir mi imagen<input type="file" id="portraitUpload" accept="image/*" hidden></label>
             <button type="button" class="btn btn-ghost light" id="portraitRemove" hidden>Quitar imagen</button></li>
         </ol>
-      </div>
-      <div class="portrait-layout" id="drawPanel" hidden>
-        <div class="portrait-side">
-          <div class="portrait-frame" id="avatarPreview"></div>
-          <div class="portrait-actions">
-            <button class="btn btn-primary" id="avatarRandom" type="button">🎲 Al azar</button>
-            <button class="btn btn-ghost light" id="avatarRace" type="button">Rasgos de mi raza</button>
-            <button class="btn btn-ghost light" id="avatarPng" type="button">⬇ Descargar imagen</button>
-          </div>
-        </div>
-        <div class="portrait-panel">
-          <div class="portrait-tabs" id="avatarTabs" role="tablist"></div>
-          <div class="portrait-options" id="avatarOptions"></div>
-        </div>
       </div>
     </section>
 
@@ -172,11 +154,9 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/3.0.10/umd.min.js"></script>
   <script src="data.js"></script>
   <script src="spells.js"></script>
   <script src="personality.js"></script>
-  <script src="avatar.js"></script>
   <script src="sketch.js"></script>
   <script src="app.js"></script>
 </body>

@@ -17,7 +17,7 @@
   const blank = () => ({ step: 0, name: "", player: "", race: null, subrace: null, raceChoice: null, cls: null, equip: [], skills: [], subclass: null,
     spells: { cantrips: [], lvl1: [], race: null }, bg: null,
     persona: { traits: ["", ""], ideal: "", bond: "", flaw: "", alignment: null, languages: [] },
-    avatar: null, portraitImg: null, portraitMode: "picrew", story: "" });
+    portraitImg: null, story: "" });
   let state = load() || blank();
 
   const $ = (sel) => document.querySelector(sel);
@@ -54,7 +54,7 @@
       case STEP.spells: return !!state.cls && spellsComplete();
       case STEP.bg: return !!state.bg;
       case STEP.persona: return personaFilled();
-      case STEP.portrait: return !!(state.portraitImg || state.avatar);
+      case STEP.portrait: return !!state.portraitImg;
       case STEP.story: return state.story.trim().length > 0;
       default: return false;
     }
@@ -625,63 +625,12 @@
     window.scrollTo(0, y);
   }
 
-  /* ---------- Retrato ---------- */
-  const AVATAR_TABS = [
-    ["Cara", [["face", "Forma de la cara"], ["skin", "Tono de piel", "skin"], ["blush", "Rubor"], ["marks", "Detalles"]]],
-    ["Ojos y boca", [["eyes", "Ojos"], ["eye", "Color de ojos", "eye"], ["brows", "Cejas"], ["mouth", "Boca"]]],
-    ["Pelo", [["hairStyle", "Peinado"], ["hair", "Color de pelo", "hair"], ["facialHair", "Vello facial"]]],
-    ["Fantasía", [["ears", "Orejas"], ["animalEars", "Orejas de animal"], ["horns", "Cuernos"], ["horn", "Color de cuernos", "horn"]]],
-    ["Ropa", [["outfit", "Ropa"], ["cloth", "Color de la ropa", "cloth"], ["headwear", "Cabeza"], ["extra", "Complementos"]]],
-    ["Fondo", [["bg", "Fondo", "bg"]]]
-  ];
-  let avatarTab = 0;
-
-  function avatarCfg() {
-    if (!state.avatar) state.avatar = Object.assign({}, Avatar.DEFAULTS, Avatar.RACE_HINTS[state.race] || {});
-    return state.avatar;
-  }
-
+  /* ---------- Retrato (Picrew o imagen propia) ---------- */
   function renderPortrait() {
-    const mode = state.portraitMode === "draw" ? "draw" : "picrew";
-    document.querySelectorAll("[data-pmode]").forEach((b) => b.classList.toggle("active", b.dataset.pmode === mode));
-    $("#picrewPanel").hidden = mode !== "picrew";
-    $("#drawPanel").hidden = mode !== "draw";
     $("#picrewPreview").innerHTML = state.portraitImg
       ? `<img src="${state.portraitImg}" alt="Tu retrato">`
       : `<span>Aquí aparecerá tu imagen</span>`;
     $("#portraitRemove").hidden = !state.portraitImg;
-    if (mode !== "draw") return;
-    const cfg = avatarCfg();
-    save();
-    $("#avatarPreview").innerHTML = Avatar.render(cfg);
-    $("#avatarTabs").innerHTML = AVATAR_TABS.map(([t], i) => `<button type="button" role="tab" aria-selected="${i === avatarTab}" class="${i === avatarTab ? "active" : ""}" data-tab="${i}">${esc(t)}</button>`).join("");
-    const [, groups] = AVATAR_TABS[avatarTab];
-    $("#avatarOptions").innerHTML = groups.map(([key, label, colorKey]) => {
-      if (colorKey) {
-        return `<div class="av-group"><h4>${esc(label)}</h4><div class="swatches">${Avatar.COLORS[colorKey].map(([hex, name]) =>
-          `<button type="button" class="swatch ${cfg[key] === hex ? "selected" : ""}" style="background:${hex}" data-av="${key}" data-val="${hex}" title="${esc(name)}" aria-label="${esc(name)}"></button>`).join("")}
-          <label class="swatch custom" title="Color personalizado"><input type="color" data-avcolor="${key}" value="${cfg[key]}">✎</label></div></div>`;
-      }
-      return `<div class="av-group"><h4>${esc(label)}</h4><div class="av-options">${Avatar.OPTIONS[key].map(([val, name]) =>
-        `<button type="button" class="av-opt ${cfg[key] === val ? "selected" : ""}" data-av="${key}" data-val="${val}">
-          <span class="av-thumb">${Avatar.render(Object.assign({}, cfg, { [key]: val }), { size: 66 })}</span><span>${esc(name)}</span></button>`).join("")}</div></div>`;
-    }).join("");
-  }
-
-  function setAvatar(key, val) {
-    avatarCfg()[key] = val; save();
-    const y = $("#avatarOptions").scrollTop;
-    renderPortrait(); renderStepper();
-    $("#avatarOptions").scrollTop = y;
-  }
-
-  async function downloadAvatarPng() {
-    try {
-      const url = await Avatar.toPng(avatarCfg(), 900);
-      const a = document.createElement("a");
-      a.href = url; a.download = `${fileSlug()}-retrato.png`;
-      document.body.appendChild(a); a.click(); a.remove();
-    } catch (err) { console.error(err); alert("No se pudo crear la imagen."); }
   }
 
   // Reduce la imagen subida para que quepa en el navegador y en el PDF
@@ -729,7 +678,8 @@
   /* ---------- Ficha estilo boceto ---------- */
   const PAGE_W = 794, PAGE_H = 1123;
   const SKILL_ORDER = ["Atletismo", "Acrobacias", "Juego de manos", "Sigilo", "Arcanos", "Historia", "Investigación", "Naturaleza", "Religión", "Medicina", "Percepción", "Perspicacia", "Supervivencia", "Trato con animales", "Engaño", "Interpretación", "Intimidación", "Persuasión"];
-  const ABILITIES = [["Fuerza", "circle"], ["Destreza", "triangle"], ["Constitución", "rect"], ["Inteligencia", "pentagon"], ["Sabiduría", "diamond"], ["Carisma", "star"]];
+  const ABILITIES = [["Fuerza", "FUE"], ["Destreza", "DES"], ["Constitución", "CON"], ["Inteligencia", "INT"], ["Sabiduría", "SAB"], ["Carisma", "CAR"]];
+  const ABBR = { Fuerza: "FUE", Destreza: "DES", "Constitución": "CON", Inteligencia: "INT", "Sabiduría": "SAB", Carisma: "CAR" };
 
   function sheetData() {
     const r = findRace(state.race), c = findClass(state.cls), b = findBg(state.bg);
@@ -749,20 +699,18 @@
 
   const shape = (s, cls = "", inner = "", extra = "") => `<div class="sk-shape ${cls}" data-shape="${s}" ${extra}>${inner}</div>`;
 
-  function portraitHTML(forPdf, png) {
-    const drawn = () => (forPdf && png ? `<img src="${png}" alt="">` : Avatar.render(state.avatar));
-    if (state.portraitMode === "draw" && state.avatar) return drawn();
+  function portraitHTML() {
     if (state.portraitImg) return `<img src="${state.portraitImg}" alt="">`;
-    if (state.avatar) return drawn();
-    return `<span class="sk-hint">retrato</span>`;
+    return `<span class="sk-hint">tu retrato</span>`;
   }
 
-  function page1HTML(d, forPdf, png) {
+  function page1HTML(d) {
     const { r, c, b, sc } = d;
-    const name = state.name.trim();
     const hitMax = c ? c.hitDie.slice(1) : "";
     const speed = r ? r.speed.split(" (")[0].split(";")[0] : "";
-    const spellsList = [...d.classSpells.cantrips.map((s) => [s, "truco"]), ...d.raceCantrip.map((s) => [s, "truco"]), ...d.classSpells.lvl1.map((s) => [s, "nv 1"])];
+    const saves = c ? c.saves.split(", ") : [];
+    const spells = [...d.classSpells.cantrips, ...d.raceCantrip].map((s) => SPELLS[s].es);
+    const spells1 = d.classSpells.lvl1.map((s) => SPELLS[s].es);
     const traitNames = [
       ...d.raceTraits.map((t) => t.n),
       ...(c ? c.features : []),
@@ -772,64 +720,70 @@
     const tools = [c && c.tools !== "Ninguna" ? c.tools : "", b && b.tools !== "Ninguna" ? b.tools : ""].filter(Boolean).join("; ");
     const inventory = [...(c ? chosenEquipment(c.id, state.equip) : []), ...(b ? [b.equipment] : [])];
     const raceAsi = r ? r.asi + (d.sub && d.sub.asi !== r.asi ? "; " + d.sub.asi : "") : "";
+    const tag = (label, value, extra = "") => shape("rect", "sk-tag " + extra, `<span class="sk-lbl">${label}</span><b>${esc(value || "")}</b>`);
+    const stat = (label, inner, hint) => `<div class="sk-stat">${shape("rect", "sk-statbox", inner)}<span class="sk-lbl">${label}</span>${hint ? `<small>${hint}</small>` : ""}</div>`;
 
     return `<div class="sk-page sk-p1">
-      ${shape("rect", "sk-portrait", portraitHTML(forPdf, png))}
-      <div class="sk-top">
-        <div class="sk-row1">
-          ${shape("sparkle", "sk-lv", `<span class="sk-lbl">Lv</span><b>1</b>`)}
-          ${shape("banner", "sk-name", `<span class="sk-lbl">Nombre:</span><b>${esc(name)}</b>`)}
-        </div>
-        <div class="sk-row2">
-          ${shape("blob", "sk-race", `<span class="sk-lbl">Raza</span><b>${esc(r ? raceLabel() : "")}</b>`)}
-          ${shape("burst", "sk-bg", `<span class="sk-lbl">Trasfondo</span><b>${esc(b ? b.name : "")}</b>`)}
-        </div>
-        <div class="sk-row3">
-          ${shape("scroll", "sk-class", `<span class="sk-lbl">Clase</span><b>${esc(c ? c.name : "")}</b>${sc ? `<small>${esc(sc.name)}</small>` : ""}`)}
-          ${state.player.trim() ? `<div class="sk-player"><span class="sk-lbl">Jugadora:</span> ${esc(state.player.trim())}</div>` : ""}
-        </div>
-      </div>
-
-      <div class="sk-abilities">
-        ${ABILITIES.map(([n, s]) => `<div class="sk-ab">${shape(s, "sk-ab-shape", "")}<span class="sk-ab-name">${n}</span></div>`).join("")}
-        ${raceAsi ? `<p class="sk-note">Raza: ${esc(raceAsi)}</p>` : ""}
-      </div>
-
-      <div class="sk-mid">
-        <div class="sk-inspo">
-          <div class="sk-mini">${shape("sparkle", "sk-spark", "")}<span>Inspiración</span></div>
-          <div class="sk-mini">${shape("sparkle", "sk-spark", "")}<span>Proficiencia <b class="sk-prof">+2</b></span></div>
-        </div>
-        ${shape("rect", "sk-skills", `<ul>${SKILL_ORDER.map((sk) => `<li class="${d.profSkills.has(sk) ? "on" : ""}"><i class="dot"></i><span class="blank"></span>${esc(sk)}</li>`).join("")}</ul>`)}
-      </div>
-
-      <div class="sk-right">
-        <div class="sk-stats">
-          <div class="sk-stat">${shape("shield", "sk-st", "")}<span>Armadura</span></div>
-          <div class="sk-stat">${shape("heart", "sk-st", c ? `<small>${hitMax} + CON</small>` : "")}<span>Vida</span></div>
-          <div class="sk-stat">${shape("splat", "sk-st", "")}<span>¡Iniciativa!</span></div>
-          <div class="sk-stat">${shape("boot", "sk-st", `<b>${esc(speed)}</b>`)}<span>Velocidad</span></div>
-        </div>
-        <div class="sk-row-saves">
-          <div class="sk-death"><span class="sk-lbl">Salvación de muerte</span>
-            <div>éxitos ${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}</div>
-            <div>fallos ${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}</div>
+      <header class="sk-head">
+        ${shape("rect", "sk-portrait", portraitHTML())}
+        <div class="sk-id">
+          ${shape("banner", "sk-name", `<span class="sk-lbl">Nombre</span><b>${esc(state.name.trim())}</b>`)}
+          <div class="sk-tags">
+            ${tag("Raza", r ? raceLabel() : "")}
+            ${tag("Clase", c ? c.name + (sc ? " · " + sc.name : "") : "", "wide")}
+            ${tag("Trasfondo", b ? b.name : "")}
+            ${tag("Nivel", "1", "tiny")}
           </div>
-          ${shape("sword", "sk-dice", `<b>1${esc(c ? c.hitDie : "")}</b><span class="sk-lbl">Dado</span>`)}
+          ${state.player.trim() ? `<p class="sk-player"><span class="sk-lbl">Jugadora:</span> ${esc(state.player.trim())}</p>` : ""}
         </div>
-        ${shape("rect", "sk-box sk-attacks", `<h3>Ataques y hechizos</h3>
-          ${d.info && !d.info.later ? `<p class="sk-small">Espacios de nivel 1: ${d.info.slots} · ${esc(d.info.ability)}</p>` : ""}
-          <ul>${spellsList.map(([s, t]) => `<li>${esc(SPELLS[s].es)} <em>(${t})</em></li>`).join("") || '<li class="sk-empty">—</li>'}</ul>`)}
-        ${shape("rect", "sk-box sk-traits", `<h3 class="sk-vert">Rasgos</h3><ul>${traitNames.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`)}
-      </div>
+      </header>
 
-      ${shape("rect", "sk-box sk-comp", `<h3>Competencias</h3>
-        <p><b>Salvaciones:</b> ${esc(c ? c.saves : "")}</p>
-        <p><b>Armaduras:</b> ${esc(c ? c.armor : "")}</p>
-        <p><b>Armas:</b> ${esc(c ? c.weapons : "")}</p>
-        ${tools ? `<p><b>Herramientas:</b> ${esc(tools)}</p>` : ""}
-        <p><b>Idiomas:</b> ${esc(d.langs)}</p>`)}
-      ${shape("rect", "sk-box sk-inv", `${shape("banner", "sk-inv-title", "<h3>Inventario</h3>")}<ul>${inventory.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`)}
+      <section class="sk-block">
+        <h3>Características <small>— tira los dados y apunta tu puntuación; en el círculo, su modificador</small></h3>
+        <div class="sk-abil-row">
+          ${ABILITIES.map(([n, ab]) => shape("rect", "sk-abil", `<span class="sk-lbl">${n}</span><span class="sk-abbr">${ab}</span>${shape("circle", "sk-mod", "")}`)).join("")}
+        </div>
+        ${raceAsi ? `<p class="sk-note">✎ Bonus de tu raza: ${esc(raceAsi)}</p>` : ""}
+      </section>
+
+      <section class="sk-block">
+        <h3>En combate</h3>
+        <div class="sk-stat-row">
+          ${stat("Clase de armadura", "", "según tu armadura")}
+          ${stat("Puntos de golpe", "", c ? `nivel 1: ${hitMax} + mod. CON` : "")}
+          ${stat("Iniciativa", "", "= mod. DES")}
+          ${stat("Velocidad", `<b>${esc(speed)}</b>`, "")}
+          ${stat("Competencia", "<b>+2</b>", "súmalo a lo que dominas")}
+          ${stat("Dado de golpe", `<b>${c ? "1" + esc(c.hitDie) : ""}</b>`, "")}
+        </div>
+      </section>
+
+      <div class="sk-cols">
+        <div class="sk-col-l">
+          ${shape("rect", "sk-box", `<h3>Tiradas de salvación</h3>
+            <ul class="sk-checks">${ABILITIES.map(([n, ab]) => `<li class="${saves.includes(n) ? "on" : ""}"><i class="dot"></i><span class="blank"></span>${n}</li>`).join("")}</ul>`)}
+          ${shape("rect", "sk-box sk-skills", `<h3>Habilidades</h3>
+            <ul class="sk-checks">${SKILL_ORDER.map((sk) => {
+              const abil = ABBR[(SKILLS.find((x) => x[0] === sk) || [, ""])[1]] || "";
+              return `<li class="${d.profSkills.has(sk) ? "on" : ""}"><i class="dot"></i><span class="blank"></span>${esc(sk)} <em>${abil}</em></li>`;
+            }).join("")}</ul>
+            <p class="sk-legend">● = la dominas: suma +2 a la tirada</p>`)}
+        </div>
+        <div class="sk-col-r">
+          ${shape("rect", "sk-box", `<h3>Rasgos y capacidades</h3><ul class="sk-list two">${traitNames.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+            <p class="sk-legend">Explicados en la página siguiente</p>`)}
+          ${spells.length || spells1.length ? shape("rect", "sk-box", `<h3>Conjuros</h3>
+            ${d.info && !d.info.later ? `<p class="sk-small">Lanzas con ${esc(d.info.ability)} · ${d.info.slots} espacio${d.info.slots > 1 ? "s" : ""} de nivel 1 (se recuperan al descansar)</p>` : ""}
+            ${spells.length ? `<p><span class="sk-lbl">Trucos (ilimitados):</span> ${esc(spells.join(", "))}</p>` : ""}
+            ${spells1.length ? `<p><span class="sk-lbl">Nivel 1:</span> ${esc(spells1.join(", "))}</p>` : ""}`) : ""}
+          ${shape("rect", "sk-box", `<h3>Competencias e idiomas</h3>
+            <p><span class="sk-lbl">Armaduras:</span> ${esc(c ? c.armor : "")}</p>
+            <p><span class="sk-lbl">Armas:</span> ${esc(c ? c.weapons : "")}</p>
+            ${tools ? `<p><span class="sk-lbl">Herramientas:</span> ${esc(tools)}</p>` : ""}
+            <p><span class="sk-lbl">Idiomas:</span> ${esc(d.langs)}</p>`)}
+          ${shape("rect", "sk-box sk-inv", `<h3>Equipo</h3><ul class="sk-list">${inventory.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`)}
+        </div>
+      </div>
     </div>`;
   }
 
@@ -848,7 +802,7 @@
       ...(d.sc && d.sc.spells && d.sc.spells !== "—" ? [["Conjuros adicionales (" + d.sc.name + ")", d.sc.spells]] : []),
       ...(d.b ? [[d.b.feature.n + " (trasfondo)", d.b.feature.d]] : [])
     ];
-    if (traits.length) out.push(["Rasgos en detalle", traits.map(([n, t]) => `<p><b>${esc(n)}.</b> ${esc(t)}</p>`)]);
+    if (traits.length) out.push(["Tus rasgos, explicados", traits.map(([n, t]) => `<p><b>${esc(n)}.</b> ${esc(t)}</p>`)]);
     const spells = [...d.classSpells.cantrips, ...d.raceCantrip, ...d.classSpells.lvl1];
     if (spells.length) {
       const head = d.info && !d.info.later ? [`<p class="sk-small">CD de salvación = 8 + 2 + mod. de ${esc(d.info.ability)} · Ataque de conjuro = 2 + mod. de ${esc(d.info.ability)}</p>`] : [];
@@ -870,8 +824,6 @@
 
   // Construye todas las páginas dentro de container y reparte los bloques sin cortarlos
   async function buildSheet(container, forPdf) {
-    let png = null;
-    if (forPdf && state.avatar && (state.portraitMode === "draw" || !state.portraitImg)) { try { png = await Avatar.toPng(state.avatar, 600); } catch (e) { console.warn(e); } }
     // Las fuentes manuscritas solo se descargan al usarse: se fuerzan antes de medir
     if (document.fonts?.load) {
       try {
@@ -880,7 +832,7 @@
       } catch { /* sin fuentes, se usa la de reserva */ }
     }
     const d = sheetData();
-    container.innerHTML = page1HTML(d, forPdf, png);
+    container.innerHTML = page1HTML(d);
     const sections = detailSections(d);
     if (sections.length) {
       let flow = newDetailPage(container);
@@ -1072,29 +1024,6 @@
       });
     });
 
-    $("#avatarTabs").addEventListener("click", (e) => {
-      const t = e.target.closest("[data-tab]");
-      if (t) { avatarTab = +t.dataset.tab; renderPortrait(); }
-    });
-    $("#avatarOptions").addEventListener("click", (e) => {
-      const o = e.target.closest("[data-av]");
-      if (o) setAvatar(o.dataset.av, o.dataset.val);
-    });
-    $("#avatarOptions").addEventListener("change", (e) => {
-      const inp = e.target.closest("[data-avcolor]");
-      if (inp) setAvatar(inp.dataset.avcolor, inp.value);
-    });
-    $("#avatarRandom").addEventListener("click", () => {
-      state.avatar = Avatar.random(); save(); renderPortrait(); renderStepper();
-      const f = $("#avatarPreview"); f.classList.remove("shuffle"); void f.offsetWidth; f.classList.add("shuffle");
-    });
-    $("#avatarRace").addEventListener("click", () => {
-      Object.assign(avatarCfg(), Avatar.RACE_HINTS[state.race] || {}); save(); renderPortrait();
-    });
-    $("#avatarPng").addEventListener("click", downloadAvatarPng);
-    document.querySelectorAll("[data-pmode]").forEach((b) => b.addEventListener("click", () => {
-      state.portraitMode = b.dataset.pmode; save(); renderPortrait(); renderStepper();
-    }));
     $("#portraitUpload").addEventListener("change", (e) => { loadPortraitFile(e.target.files[0]); e.target.value = ""; });
     $("#portraitRemove").addEventListener("click", () => { state.portraitImg = null; save(); renderPortrait(); renderStepper(); });
 
