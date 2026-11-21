@@ -73,8 +73,39 @@
       <div class="card-grid" id="bgGrid"></div>
     </section>
 
-    <!-- Paso 6: historia -->
+    <!-- Paso 6: personalidad (opcional) -->
     <section class="step" data-step="5">
+      <div class="step-intro">
+        <h2>Personalidad</h2>
+        <p class="hint">Opcional. Ideas de tu trasfondo para dar vida al personaje antes de escribir su historia. Pulsa una opción, tira el dado 🎲 o escribe la tuya.</p>
+      </div>
+      <div id="personaBox"></div>
+    </section>
+
+    <!-- Paso 7: retrato -->
+    <section class="step" data-step="6">
+      <div class="step-intro">
+        <h2>Tu retrato</h2>
+        <p class="hint">Dibuja a tu personaje: elige cada detalle o deja que los dados decidan.</p>
+      </div>
+      <div class="portrait-layout">
+        <div class="portrait-side">
+          <div class="portrait-frame" id="avatarPreview"></div>
+          <div class="portrait-actions">
+            <button class="btn btn-primary" id="avatarRandom" type="button">🎲 Al azar</button>
+            <button class="btn btn-ghost light" id="avatarRace" type="button">Rasgos de mi raza</button>
+            <button class="btn btn-ghost light" id="avatarPng" type="button">⬇ Descargar imagen</button>
+          </div>
+        </div>
+        <div class="portrait-panel">
+          <div class="portrait-tabs" id="avatarTabs" role="tablist"></div>
+          <div class="portrait-options" id="avatarOptions"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Paso 8: historia -->
+    <section class="step" data-step="7">
       <div class="scroll-panel">
         <h2>Tu historia</h2>
         <p class="hint">Unas líneas bastan. Si te quedas en blanco, prueba a responder alguna de estas preguntas:</p>
@@ -87,8 +118,8 @@
       </div>
     </section>
 
-    <!-- Paso 7: resultado -->
-    <section class="step" data-step="6">
+    <!-- Paso 9: resultado -->
+    <section class="step" data-step="8">
       <div class="step-intro">
         <h2>Tu pergamino de personaje</h2>
         <p class="hint">Revisa que todo esté bien y descárgalo para llevarlo a la mesa.</p>
@@ -128,6 +159,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="data.js"></script>
   <script src="spells.js"></script>
+  <script src="personality.js"></script>
+  <script src="avatar.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

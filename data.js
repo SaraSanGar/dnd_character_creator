@@ -600,3 +600,140 @@ const CLASS_EQUIPMENT = {
     "Un libro de conjuros"
   ] }
 };
+
+/* ---------- Habilidades ---------- */
+const SKILLS = [
+  ["Acrobacias", "Destreza"], ["Arcanos", "Inteligencia"], ["Atletismo", "Fuerza"], ["Engaño", "Carisma"],
+  ["Historia", "Inteligencia"], ["Interpretación", "Carisma"], ["Intimidación", "Carisma"], ["Investigación", "Inteligencia"],
+  ["Juego de manos", "Destreza"], ["Medicina", "Sabiduría"], ["Naturaleza", "Inteligencia"], ["Percepción", "Sabiduría"],
+  ["Perspicacia", "Sabiduría"], ["Persuasión", "Carisma"], ["Religión", "Inteligencia"], ["Sigilo", "Destreza"],
+  ["Supervivencia", "Sabiduría"], ["Trato con animales", "Sabiduría"]
+];
+
+/* Habilidades a elegir por clase (de la competencia «Skills» de cada clase) */
+const CLASS_SKILLS = {
+  artificer: { n: 2, from: ["Arcanos", "Historia", "Investigación", "Medicina", "Naturaleza", "Percepción", "Juego de manos"] },
+  barbarian: { n: 2, from: ["Trato con animales", "Atletismo", "Intimidación", "Naturaleza", "Percepción", "Supervivencia"] },
+  bard: { n: 3, from: null },
+  cleric: { n: 2, from: ["Historia", "Perspicacia", "Medicina", "Persuasión", "Religión"] },
+  druid: { n: 2, from: ["Arcanos", "Trato con animales", "Perspicacia", "Medicina", "Naturaleza", "Percepción", "Religión", "Supervivencia"] },
+  fighter: { n: 2, from: ["Acrobacias", "Trato con animales", "Atletismo", "Historia", "Perspicacia", "Intimidación", "Percepción", "Supervivencia"] },
+  monk: { n: 2, from: ["Acrobacias", "Atletismo", "Historia", "Perspicacia", "Religión", "Sigilo"] },
+  paladin: { n: 2, from: ["Atletismo", "Perspicacia", "Intimidación", "Medicina", "Persuasión", "Religión"] },
+  ranger: { n: 3, from: ["Trato con animales", "Atletismo", "Perspicacia", "Investigación", "Naturaleza", "Percepción", "Sigilo", "Supervivencia"] },
+  rogue: { n: 4, from: ["Acrobacias", "Atletismo", "Engaño", "Perspicacia", "Intimidación", "Investigación", "Percepción", "Interpretación", "Persuasión", "Juego de manos", "Sigilo"] },
+  sorcerer: { n: 2, from: ["Arcanos", "Engaño", "Perspicacia", "Intimidación", "Persuasión", "Religión"] },
+  warlock: { n: 2, from: ["Arcanos", "Engaño", "Historia", "Intimidación", "Investigación", "Naturaleza", "Religión"] },
+  wizard: { n: 2, from: ["Arcanos", "Historia", "Perspicacia", "Investigación", "Medicina", "Religión"] }
+};
+
+/* Habilidades fijas que dan algunas razas */
+const RACE_SKILLS = { elf: ["Percepción"], "half-orc": ["Intimidación"], goliath: ["Atletismo"], tabaxi: ["Percepción", "Sigilo"], harengon: ["Percepción"] };
+
+/* ---------- Subclases elegidas a nivel 1 ---------- */
+const SUBCLASSES = {
+  cleric: {
+    label: "Dominio divino",
+    hint: "A nivel 1 eliges el dominio de tu dios. Te da rasgos propios y conjuros de dominio que siempre tienes preparados (no cuentan para tu límite).",
+    options: [
+      { id: "life", name: "Vida", en: "Life Domain", src: "PHB",
+        intro: "Se centra en la energía positiva que sostiene toda la vida. Sus dioses promueven la salud curando a enfermos y heridos y alejando las fuerzas de la muerte y la no muerte.",
+        spells: "Bendición, Curar heridas",
+        feats: [["Competencia adicional", "Competencia con armaduras pesadas."], ["Discípulo de la vida", "Cuando usas un conjuro de nivel 1 o superior para curar, la criatura recupera además 2 + el nivel del conjuro."]] },
+      { id: "light", name: "Luz", en: "Light Domain", src: "PHB",
+        intro: "Los dioses de la luz promueven el renacer y la renovación, la verdad, la vigilancia y la belleza, a menudo con el símbolo del sol.",
+        spells: "Manos ardientes, Fuego feérico",
+        feats: [["Truco adicional", "Conoces el truco Luz, que no cuenta para tu número de trucos."], ["Destello protector", "Cuando te ataca una criatura a 9 m que puedes ver, usas tu reacción para darle desventaja en el ataque. Tantas veces como tu mod. de Sabiduría (mín. 1) por descanso largo."]] },
+      { id: "knowledge", name: "Conocimiento", en: "Knowledge Domain", src: "PHB",
+        intro: "Los dioses del conocimiento valoran el aprendizaje y la comprensión por encima de todo. Sus fieles estudian saberes esotéricos y buscan secretos.",
+        spells: "Orden imperiosa, Identificar",
+        feats: [["Bendiciones del conocimiento", "Aprendes dos idiomas a tu elección y ganas competencia en dos de estas habilidades: Arcanos, Historia, Naturaleza o Religión. Tu bonificador de competencia se duplica en ellas."]] },
+      { id: "nature", name: "Naturaleza", en: "Nature Domain", src: "PHB",
+        intro: "Los dioses de la naturaleza son tan variados como el mundo natural: desde dioses de los bosques profundos hasta deidades amables de manantiales y arboledas.",
+        spells: "Amistad con los animales, Hablar con los animales",
+        feats: [["Acólito de la naturaleza", "Aprendes un truco de druida (no cuenta para tu límite) y ganas competencia en Trato con animales, Naturaleza o Supervivencia (a elegir)."], ["Competencia adicional", "Competencia con armaduras pesadas."]] },
+      { id: "tempest", name: "Tempestad", en: "Tempest Domain", src: "PHB",
+        intro: "Sus dioses gobiernan tormentas, mar y cielo: dioses del rayo y el trueno, de los terremotos, del valor y de la fuerza.",
+        spells: "Nube de niebla, Onda atronadora",
+        feats: [["Competencias adicionales", "Competencia con armas marciales y armaduras pesadas."], ["Ira de la tormenta", "Cuando una criatura a 1,5 m te golpea, usas tu reacción para que haga una salvación de Destreza: 2d8 de daño de relámpago o trueno, mitad si supera. Tantas veces como tu mod. de Sabiduría (mín. 1) por descanso largo."]] },
+      { id: "trickery", name: "Engaño", en: "Trickery Domain", src: "PHB",
+        intro: "Dioses traviesos y provocadores, patronos de ladrones, pícaros, jugadores, rebeldes y libertadores. Prefieren el subterfugio, las bromas y el engaño.",
+        spells: "Hechizar persona, Disfrazarse",
+        feats: [["Bendición del embaucador", "Con una acción tocas a otra criatura voluntaria y le das ventaja en pruebas de Destreza (Sigilo) durante 1 hora."]] },
+      { id: "war", name: "Guerra", en: "War Domain", src: "PHB",
+        intro: "Los dioses de la guerra velan por los guerreros y premian sus grandes hazañas. Sus clérigos destacan en batalla e inspiran a otros a luchar.",
+        spells: "Favor divino, Escudo de fe",
+        feats: [["Competencia adicional", "Competencia con armas marciales y armaduras pesadas."], ["Sacerdote de guerra", "Cuando usas la acción de Atacar, puedes hacer un ataque con arma como acción adicional. Tantas veces como tu mod. de Sabiduría (mín. 1) por descanso largo."]] },
+      { id: "death", name: "Muerte", en: "Death Domain", src: "Dungeon Master's Guide",
+        intro: "Se ocupa de las fuerzas que causan la muerte y de la energía negativa que da origen a los muertos vivientes. Suele ser un dominio de villanos: consulta con tu DM.",
+        spells: "Falsa vida, Rayo nauseabundo",
+        feats: [["Competencia adicional", "Competencia con armas marciales."], ["Segador", "Aprendes un truco de nigromancia de cualquier lista. Tus trucos de nigromancia de un solo objetivo pueden afectar a dos criaturas a 1,5 m entre sí."]] },
+      { id: "forge", name: "Forja", en: "Forge Domain", src: "Xanathar",
+        intro: "Los dioses de la forja son patronos de quienes trabajan el metal, desde el humilde herrero hasta los grandes artesanos legendarios.",
+        spells: "Identificar, Castigo abrasador",
+        feats: [["Competencias adicionales", "Competencia con armaduras pesadas y herramientas de herrero."], ["Bendición de la forja", "Al final de un descanso largo, tocas una armadura o un arma no mágica: se vuelve mágica con +1 a la CA o +1 a ataque y daño hasta tu siguiente descanso largo."]] },
+      { id: "grave", name: "Sepulcro", en: "Grave Domain", src: "Xanathar",
+        intro: "Los dioses del sepulcro vigilan la frontera entre la vida y la muerte. Resistirse a la muerte o profanar el descanso de los muertos es una abominación para ellos.",
+        spells: "Perdición, Falsa vida",
+        feats: [["Círculo de mortalidad", "Al curar con un conjuro a una criatura con 0 puntos de golpe, usas el máximo de cada dado. Conoces Piedad con los moribundos (alcance 9 m, como acción adicional)."], ["Ojos del sepulcro", "Con una acción detectas muertos vivientes a 18 m. Tantas veces como tu mod. de Sabiduría (mín. 1) por descanso largo."]] },
+      { id: "order", name: "Orden", en: "Order Domain", src: "Tasha",
+        intro: "Representa la disciplina y la devoción a las leyes que rigen una sociedad, una institución o una filosofía.",
+        spells: "Orden imperiosa, Heroísmo",
+        feats: [["Competencias adicionales", "Competencia con armaduras pesadas y en Intimidación o Persuasión (a elegir)."], ["Voz de autoridad", "Si lanzas un conjuro de nivel 1 o superior sobre un aliado, ese aliado puede usar su reacción para hacer un ataque con arma contra una criatura que elijas."]] },
+      { id: "peace", name: "Paz", en: "Peace Domain", src: "Tasha",
+        intro: "La paz prospera en las comunidades sanas y en las almas bondadosas. Sus dioses inspiran a resolver conflictos y a plantar cara a quienes impiden la paz.",
+        spells: "Heroísmo, Santuario",
+        feats: [["Instrumento de paz", "Competencia en Perspicacia, Interpretación o Persuasión (a elegir)."], ["Vínculo alentador", "Con una acción vinculas a tantas criaturas voluntarias como tu bonificador de competencia durante 10 minutos: mientras estén a 9 m entre sí, una vez por turno pueden sumar 1d4 a un ataque, prueba o salvación."]] },
+      { id: "twilight", name: "Crepúsculo", en: "Twilight Domain", src: "Tasha",
+        intro: "El paso de la luz a la oscuridad trae calma y alegría al terminar el día. Los dioses del crepúsculo protegen de los horrores de la noche.",
+        spells: "Fuego feérico, Dormir",
+        feats: [["Competencias adicionales", "Competencia con armas marciales y armaduras pesadas."], ["Ojos de la noche", "Visión en la oscuridad de 90 m, que puedes compartir con aliados cercanos."], ["Bendición vigilante", "Con una acción das ventaja a una criatura que tocas en su siguiente tirada de iniciativa."]] },
+      { id: "arcana", name: "Arcano", en: "Arcana Domain", src: "Sword Coast Adventurer's Guide",
+        intro: "Los dioses del dominio arcano conocen íntimamente los secretos y el potencial de la magia.",
+        spells: "Detectar magia, Proyectil mágico",
+        feats: [["Iniciado arcano", "Competencia en Arcanos y dos trucos de mago a tu elección, que cuentan como trucos de clérigo."]] }
+    ]
+  },
+  warlock: {
+    label: "Patrón de otro mundo",
+    hint: "A nivel 1 eliges el ser con el que has hecho tu pacto. Te da rasgos propios y añade conjuros a tu lista de brujo.",
+    options: [
+      { id: "fiend", name: "El Infernal", en: "The Fiend", src: "PHB",
+        intro: "Has hecho un pacto con un infernal de los planos inferiores, un ser de fines malvados, aunque tú luches contra ellos: señores demonio, archidiablos…",
+        spells: "Manos ardientes, Orden imperiosa",
+        feats: [["Bendición del Oscuro", "Cuando reduces a 0 puntos de golpe a una criatura hostil, ganas puntos de golpe temporales iguales a tu mod. de Carisma + tu nivel de brujo (mín. 1)."]] },
+      { id: "archfey", name: "El Archihada", en: "The Archfey", src: "PHB",
+        intro: "Tu patrón es un señor o señora de las hadas, una criatura de leyenda con secretos olvidados antes de que nacieran los mortales. Sus motivos son inescrutables y a veces caprichosos.",
+        spells: "Fuego feérico, Dormir",
+        feats: [["Presencia feérica", "Con una acción, las criaturas en un cubo de 3 m desde ti hacen una salvación de Sabiduría o quedan hechizadas o asustadas (a tu elección) hasta el final de tu siguiente turno. Se recupera con un descanso corto o largo."]] },
+      { id: "great-old-one", name: "El Primigenio", en: "The Great Old One", src: "PHB",
+        intro: "Tu patrón es una entidad misteriosa y totalmente ajena a la realidad, quizá del Reino Lejano. Sus motivos son incomprensibles y su conocimiento, inmenso.",
+        spells: "Susurros disonantes, Risa horrible de Tasha",
+        feats: [["Mente despierta", "Puedes hablar telepáticamente con cualquier criatura que veas a 9 m, siempre que entienda al menos un idioma."]] },
+      { id: "celestial", name: "El Celestial", en: "The Celestial", src: "Xanathar",
+        intro: "Tu patrón es un ser poderoso de los Planos Superiores: un empíreo, un solar, un ki-rin, un unicornio… Tu pacto te deja rozar la luz sagrada.",
+        spells: "Curar heridas, Saeta guía",
+        feats: [["Trucos adicionales", "Conoces Luz y Llama sagrada (no cuentan para tu límite)."], ["Luz sanadora", "Tienes una reserva de d6 igual a 1 + tu nivel de brujo. Como acción adicional curas a una criatura a 18 m gastando dados (máximo tu mod. de Carisma). Se recupera con un descanso largo."]] },
+      { id: "hexblade", name: "El Filo Maldito", en: "The Hexblade", src: "Xanathar",
+        intro: "Tu pacto es con una entidad del Shadowfell que se manifiesta en armas mágicas sensibles hechas de sombra.",
+        spells: "Escudo, Castigo colérico",
+        feats: [["Maldición del filo maldito", "Como acción adicional maldices a una criatura durante 1 minuto: +bonificador de competencia al daño contra ella, crítico con 19-20 y, si muere, recuperas puntos de golpe. Se recupera con un descanso corto o largo."], ["Guerrero maldito", "Competencia con armaduras medias, escudos y armas marciales. Puedes usar Carisma para atacar y dañar con un arma elegida (no a dos manos)."]] },
+      { id: "fathomless", name: "El Insondable", en: "The Fathomless", src: "Tasha",
+        intro: "Has sellado un pacto con las profundidades: una entidad del océano, del Plano Elemental del Agua u otro mar de otro mundo.",
+        spells: "Crear o destruir agua, Onda atronadora",
+        feats: [["Tentáculo de las profundidades", "Como acción adicional creas un tentáculo espectral a 18 m durante 1 minuto: ataque de conjuro cuerpo a cuerpo, 1d8 de daño de frío y reduce la velocidad 3 m. Puedes moverlo y repetir el ataque como acción adicional."]] },
+      { id: "genie", name: "El Genio", en: "The Genie", src: "Tasha",
+        intro: "Tu pacto es con un genio noble (dao, djinni, efreeti o marid), señor de vastos dominios en los Planos Elementales.",
+        spells: "Detectar el bien y el mal, más uno según el tipo de genio",
+        feats: [["Recipiente del genio", "Tu patrón te regala un pequeño recipiente mágico. Puedes entrar en él para descansar y, una vez por turno, añadir a un ataque daño extra igual a tu bonificador de competencia (tipo según el genio)."]] },
+      { id: "undead", name: "El No Muerto", en: "The Undead", src: "Van Richten's Guide to Ravenloft",
+        intro: "Has pactado con un ser sin muerte, una criatura que desafía el ciclo de la vida y la muerte para perseguir eternamente sus ambiciones.",
+        spells: "Perdición, Falsa vida",
+        feats: [["Forma del terror", "Como acción adicional te transformas durante 1 minuto: ganas 1d10 + tu nivel de brujo en puntos de golpe temporales, eres inmune a estar asustada y una vez por turno puedes asustar a quien golpees. Tantas veces como tu bonificador de competencia por descanso largo."]] },
+      { id: "undying", name: "El Imperecedero", en: "The Undying", src: "Sword Coast Adventurer's Guide",
+        intro: "Tu patrón ha desvelado el secreto de la vida eterna y ha visto pasar vidas mortales como estaciones. Comparte secretos de la vida y la muerte.",
+        spells: "Falsa vida, Rayo nauseabundo",
+        feats: [["Entre los muertos", "Conoces Piedad con los moribundos y tienes ventaja contra enfermedades. Los muertos vivientes deben superar una salvación de Sabiduría para atacarte directamente."]] }
+    ]
+  }
+};

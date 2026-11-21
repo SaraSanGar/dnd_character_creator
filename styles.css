@@ -546,3 +546,150 @@ h2::after {
   .mini-dl { gap: 4px 16px; }
   .spell-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Clase: habilidades ---------- */
+.count-pill { font-size: .75rem; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--gold); margin-left: 6px; color: var(--ink); letter-spacing: 0; }
+.count-pill.ok { background: var(--forest); color: #f6e7bf; border-color: var(--forest); }
+.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.skill {
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  border: 1px solid var(--gold); background: rgba(255,250,235,.5); border-radius: 6px; padding: 8px 10px;
+  display: flex; flex-direction: column; transition: all .15s;
+}
+.skill span { font-family: var(--display); font-size: .85rem; color: var(--wine-dark); }
+.skill small { font-size: .78rem; color: var(--ink-soft); }
+.skill.selected { border-color: var(--wine); background: rgba(125,34,34,.12); box-shadow: inset 0 0 0 1px var(--wine); }
+.skill.locked { opacity: .45; cursor: not-allowed; }
+
+/* ---------- Personalidad ---------- */
+.persona-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-bottom: 18px; }
+.persona-card {
+  background-color: var(--parch);
+  background-image: radial-gradient(ellipse at center, transparent 60%, rgba(122,84,40,.22) 100%);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 22px rgba(0,0,0,.4), inset 0 0 0 1px var(--gold-soft), inset 0 0 0 5px var(--parch), inset 0 0 0 6px var(--gold);
+  padding: 20px;
+}
+.persona-card.wide { margin-bottom: 18px; }
+.persona-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.persona-head h3 { font-family: var(--display); color: var(--wine); margin: 0; font-size: 1.15rem; }
+.persona-head .hint { margin-top: 2px; font-size: .9rem; }
+.dice-btn {
+  flex: none; font-family: var(--display); font-weight: 700; font-size: .85rem; cursor: pointer;
+  border: 1px solid var(--wine-dark); border-radius: 8px; padding: 6px 10px;
+  background: linear-gradient(#8e2a2a, var(--wine-dark)); color: #f6e7bf; box-shadow: 0 2px 0 #3d0d0d;
+}
+.dice-btn.rolling { animation: roll .5s ease; }
+@keyframes roll { 0% { transform: rotate(0) } 40% { transform: rotate(-25deg) scale(1.15) } 80% { transform: rotate(15deg) } 100% { transform: rotate(0) } }
+.persona-input {
+  width: 100%; font: inherit; font-size: .98rem; color: var(--ink); resize: vertical;
+  background: rgba(255,252,242,.8); border: 1px solid var(--gold-soft); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px;
+}
+.persona-input:focus { outline: none; border-color: var(--wine); background: #fffdf5; }
+.persona-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+.persona-opt {
+  width: 100%; text-align: left; font: inherit; font-size: .9rem; line-height: 1.35; color: var(--ink); cursor: pointer;
+  display: flex; gap: 8px; align-items: flex-start;
+  border: none; background: transparent; border-radius: 6px; padding: 5px 6px;
+}
+.persona-opt:hover { background: rgba(176,138,62,.15); }
+.persona-opt.selected { background: rgba(125,34,34,.12); color: var(--wine-dark); }
+.persona-opt .die {
+  flex: none; width: 22px; height: 22px; display: grid; place-items: center; margin-top: 1px;
+  font-family: var(--display); font-size: .72rem; border: 1px solid var(--gold); border-radius: 5px; background: rgba(255,250,235,.7);
+}
+.persona-opt.selected .die { background: var(--wine); color: #f6e7bf; border-color: var(--wine-dark); }
+.align-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.align {
+  text-align: center; font: inherit; color: inherit; cursor: pointer;
+  border: 1px solid var(--gold); background: rgba(255,250,235,.5); border-radius: 6px; padding: 10px 8px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.align strong { font-family: var(--display); font-size: .88rem; color: var(--wine-dark); }
+.align small { font-size: .78rem; color: var(--ink-soft); line-height: 1.3; }
+.align.selected { border-color: var(--wine); background: rgba(125,34,34,.12); box-shadow: inset 0 0 0 1px var(--wine); }
+.known-langs { margin: 0 0 12px; padding-left: 18px; font-size: .95rem; }
+.lang-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.lang-label { font-family: var(--display); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); width: 80px; }
+.lang {
+  font: inherit; font-size: .9rem; cursor: pointer; color: var(--ink);
+  border: 1px solid var(--gold); background: rgba(255,250,235,.5); border-radius: 999px; padding: 3px 12px;
+}
+.lang.selected { background: var(--wine); color: #f6e7bf; border-color: var(--wine-dark); }
+
+/* ---------- Retrato ---------- */
+.portrait-layout { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 24px; align-items: start; margin-bottom: 24px; }
+.portrait-side { position: sticky; top: 12px; }
+.portrait-frame {
+  border-radius: 50% 50% 12px 12px / 38% 38% 12px 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,.55), 0 0 0 4px var(--gold), 0 0 0 9px #2b1d12, 0 0 0 11px var(--gold-soft);
+  line-height: 0;
+  background: var(--parch);
+}
+.portrait-frame svg { width: 100%; height: auto; display: block; }
+.portrait-frame.shuffle { animation: shuffle .45s ease; }
+@keyframes shuffle { 0% { transform: scale(1) } 30% { transform: scale(.94) rotate(-2deg) } 70% { transform: scale(1.03) rotate(1deg) } 100% { transform: scale(1) } }
+.portrait-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 22px; }
+.btn-ghost.light { color: #f1dca4; border-color: var(--gold-soft); }
+.btn-ghost.light:hover { background: rgba(244,231,201,.12); }
+.portrait-panel {
+  background-color: var(--parch);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 22px rgba(0,0,0,.4), inset 0 0 0 1px var(--gold-soft), inset 0 0 0 5px var(--parch), inset 0 0 0 6px var(--gold);
+  padding: 16px 18px 20px;
+}
+.portrait-tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--gold-soft); padding-bottom: 12px; margin-bottom: 12px; }
+.portrait-tabs button {
+  font-family: var(--display); font-size: .8rem; letter-spacing: .05em; cursor: pointer;
+  border: 1px solid var(--gold); background: transparent; color: var(--ink); border-radius: 999px; padding: 6px 14px;
+}
+.portrait-tabs button.active { background: var(--wine); color: #f6e7bf; border-color: var(--wine-dark); }
+.portrait-options { max-height: 640px; overflow-y: auto; padding-right: 4px; }
+.av-group { margin-bottom: 16px; }
+.av-group h4 { font-family: var(--display); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--wine-dark); margin: 0 0 8px; }
+.av-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.av-opt {
+  font: inherit; font-size: .78rem; color: var(--ink); cursor: pointer; text-align: center;
+  border: 1px solid var(--gold-soft); background: rgba(255,250,235,.55); border-radius: 8px; padding: 6px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform .12s;
+}
+.av-opt:hover { transform: translateY(-2px); }
+.av-opt.selected { border-color: var(--wine); box-shadow: inset 0 0 0 2px var(--wine); background: rgba(125,34,34,.08); }
+.av-thumb { width: 66px; height: 75px; border-radius: 6px; overflow: hidden; line-height: 0; }
+.av-thumb svg { width: 100%; height: 100%; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.swatch {
+  width: 34px; height: 34px; border-radius: 50%; cursor: pointer; padding: 0;
+  border: 2px solid var(--parch); box-shadow: 0 0 0 1px var(--ink-soft);
+}
+.swatch.selected { box-shadow: 0 0 0 3px var(--wine); transform: scale(1.08); }
+.swatch.custom { display: grid; place-items: center; background: conic-gradient(#d65f55, #e8c66a, #8fb27a, #79a7c9, #9d8bc9, #d65f55); color: #fff; font-size: .85rem; position: relative; overflow: hidden; }
+.swatch.custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+/* ---------- Pergamino: retrato, habilidades, personalidad ---------- */
+.sheet-head.with-portrait { display: flex; align-items: center; gap: 22px; text-align: left; }
+.sheet-head.with-portrait .sheet-title { flex: 1; text-align: center; }
+.sheet-portrait {
+  flex: none; width: 150px; height: 170px; overflow: hidden; line-height: 0;
+  border-radius: 50% 50% 10px 10px / 40% 40% 10px 10px;
+  box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px #f6ead0, 0 0 0 7px var(--wine);
+}
+.sheet-portrait svg, .sheet-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.sheet-skills { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 12px; font-size: 12.5px; }
+.sheet-skills li { break-inside: avoid; }
+.sheet-skills li::before { content: "◆ "; color: var(--gold); font-size: 9px; }
+.sheet-skills span { color: var(--ink-soft); font-size: 11px; }
+.sheet .note { color: var(--wine); font-style: italic; margin-top: 4px; }
+.persona-dl { grid-template-columns: 110px 1fr; }
+
+@media (max-width: 760px) {
+  .portrait-layout { grid-template-columns: 1fr; }
+  .portrait-side { position: static; max-width: 300px; margin: 0 auto; }
+  .portrait-options { max-height: none; }
+}
+@media (max-width: 640px) {
+  .persona-grid { grid-template-columns: 1fr; }
+  .align-grid { grid-template-columns: 1fr 1fr; }
+  .lang-label { width: 100%; }
+}
