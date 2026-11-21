@@ -1,163 +1,257 @@
 <!doctype html>
 <html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Forja de Héroes</title>
-  <meta name="description" content="Crea tu personaje de D&D 5e paso a paso.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Patrick+Hand&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <header class="site-header">
-    <div class="ornament">✎ ✦ 🎲</div>
-    <h1>Forja de Héroes</h1>
-    <p class="tagline">Un pequeño grimorio para crear tu personaje de Dungeons &amp; Dragons</p>
-  </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Forja de Héroes</title>
+    <meta
+      name="description"
+      content="Crea tu personaje de D&D 5e paso a paso."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Patrick+Hand&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>Forja de Héroes</h1>
+    </header>
 
-  <nav class="stepper" id="stepper" aria-label="Pasos"></nav>
+    <nav class="stepper" id="stepper" aria-label="Pasos"></nav>
 
-  <main id="app">
-    <!-- Paso 1: nombre -->
-    <section class="step" data-step="0">
-      <div class="scroll-panel">
-        <h2>¿Cómo te llamas, aventurera?</h2>
-        <p class="hint">Todo gran relato empieza con un nombre. No te preocupes, podrás cambiarlo cuando quieras.</p>
-        <label class="field">
-          <span>Nombre del personaje</span>
-          <input type="text" id="charName" maxlength="60" placeholder="p. ej. Elowen Brisaluna" autocomplete="off">
-        </label>
-        <label class="field">
-          <span>Nombre de la jugadora <em>(opcional)</em></span>
-          <input type="text" id="playerName" maxlength="60" placeholder="Tu nombre" autocomplete="off">
-        </label>
-      </div>
-    </section>
-
-    <!-- Paso 2: raza -->
-    <section class="step" data-step="1">
-      <div class="step-intro">
-        <h2>Elige tu raza</h2>
-        <p class="hint">Tu raza (o linaje) define tu cuerpo, tus sentidos y algunos dones innatos. Pulsa una carta para leerla entera.</p>
-      </div>
-      <div class="card-grid" id="raceGrid"></div>
-    </section>
-
-    <!-- Paso 3: clase -->
-    <section class="step" data-step="2">
-      <div class="step-intro">
-        <h2>Elige tu clase</h2>
-        <p class="hint">Tu clase es tu oficio de aventurera: cómo luchas, qué magia usas y en qué destacas.</p>
-      </div>
-      <div class="card-grid" id="classGrid"></div>
-    </section>
-
-    <!-- Paso 4: conjuros -->
-    <section class="step" data-step="3">
-      <div class="step-intro">
-        <h2>Tus conjuros</h2>
-        <p class="hint" id="spellIntro">Elige tus trucos y conjuros de nivel 1.</p>
-      </div>
-      <div id="spellPicker"></div>
-    </section>
-
-    <!-- Paso 5: trasfondo -->
-    <section class="step" data-step="4">
-      <div class="step-intro">
-        <h2>Elige tu trasfondo</h2>
-        <p class="hint">Tu trasfondo cuenta qué hacías antes de la aventura y te da habilidades, equipo y un rasgo especial.</p>
-      </div>
-      <div class="card-grid" id="bgGrid"></div>
-    </section>
-
-    <!-- Paso 6: personalidad (opcional) -->
-    <section class="step" data-step="5">
-      <div class="step-intro">
-        <h2>Personalidad</h2>
-        <p class="hint">Opcional. Ideas de tu trasfondo para dar vida al personaje antes de escribir su historia. Pulsa una opción, tira el dado 🎲 o escribe la tuya.</p>
-      </div>
-      <div id="personaBox"></div>
-    </section>
-
-    <!-- Paso 7: retrato -->
-    <section class="step" data-step="6">
-      <div class="step-intro">
-        <h2>Tu retrato</h2>
-        <p class="hint">Crea tu retrato en Picrew (o usa cualquier dibujo tuyo) y súbelo aquí. Saldrá en tu ficha.</p>
-      </div>
-      <div class="picrew-panel" id="picrewPanel">
-        <div class="picrew-preview" id="picrewPreview"></div>
-        <ol class="picrew-steps">
-          <li><a class="btn btn-primary" href="https://picrew.me/en/image_maker/2795963" target="_blank" rel="noopener">Abrir el creador de Picrew ↗</a>
-            <p class="hint">Se abre en otra pestaña (Picrew no deja que se muestre dentro de otras webs).</p></li>
-          <li>Cuando termines, pulsa el botón de descargar de Picrew y guarda la imagen.</li>
-          <li><label class="btn btn-ghost light upload-btn">⬆ Subir mi imagen<input type="file" id="portraitUpload" accept="image/*" hidden></label>
-            <button type="button" class="btn btn-ghost light" id="portraitRemove" hidden>Quitar imagen</button></li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- Paso 8: historia -->
-    <section class="step" data-step="7">
-      <div class="scroll-panel">
-        <h2>Tu historia</h2>
-        <p class="hint">Unas líneas bastan. Si te quedas en blanco, prueba a responder alguna de estas preguntas:</p>
-        <ul class="prompts" id="storyPrompts"></ul>
-        <label class="field">
-          <span>Historia del personaje</span>
-          <textarea id="story" rows="10" maxlength="4000" placeholder="Érase una vez…"></textarea>
-        </label>
-        <div class="counter" id="storyCount">0 / 4000</div>
-      </div>
-    </section>
-
-    <!-- Paso 9: resultado -->
-    <section class="step" data-step="8">
-      <div class="step-intro">
-        <h2>Tu pergamino de personaje</h2>
-        <p class="hint">Revisa que todo esté bien y descárgalo para llevarlo a la mesa.</p>
-        <div class="actions-row">
-          <button class="btn btn-primary" id="downloadPdf">⬇ Descargar PDF</button>
-          <button class="btn btn-ghost" id="resetAll">Empezar de nuevo</button>
+    <main id="app">
+      <!-- Paso 1: nombre -->
+      <section class="step" data-step="0">
+        <div class="scroll-panel">
+          <h2>¿Cómo te llamas, aventurera?</h2>
+          <p class="hint">
+            Todo gran relato empieza con un nombre. No te preocupes, podrás
+            cambiarlo cuando quieras.
+          </p>
+          <label class="field">
+            <span>Nombre del personaje</span>
+            <input
+              type="text"
+              id="charName"
+              maxlength="60"
+              placeholder="p. ej. Elowen Brisaluna"
+              autocomplete="off"
+            />
+          </label>
+          <label class="field">
+            <span>Nombre de la jugadora <em>(opcional)</em></span>
+            <input
+              type="text"
+              id="playerName"
+              maxlength="60"
+              placeholder="Tu nombre"
+              autocomplete="off"
+            />
+          </label>
         </div>
-        <p class="missing" id="missingNote" hidden></p>
-      </div>
-      <div class="sheet-wrap">
-        <div id="sheet" class="sheet"></div>
-      </div>
-    </section>
-  </main>
+      </section>
 
-  <footer class="nav-footer">
-    <button class="btn btn-ghost" id="prevBtn">← Anterior</button>
-    <div class="selection-summary" id="selectionSummary"></div>
-    <button class="btn btn-primary" id="nextBtn">Siguiente →</button>
-  </footer>
+      <!-- Paso 2: raza -->
+      <section class="step" data-step="1">
+        <div class="step-intro">
+          <h2>Elige tu raza</h2>
+          <p class="hint">
+            Tu raza (o linaje) define tu cuerpo, tus sentidos y algunos dones
+            innatos. Pulsa una carta para leerla entera.
+          </p>
+        </div>
+        <div class="card-grid" id="raceGrid"></div>
+      </section>
 
-  <p class="credits">Datos de <a href="https://dnd5e.wikidot.com" target="_blank" rel="noopener">dnd5e.wikidot.com</a>, traducidos al castellano. Contenido de D&amp;D © Wizards of the Coast.</p>
+      <!-- Paso 3: clase -->
+      <section class="step" data-step="2">
+        <div class="step-intro">
+          <h2>Elige tu clase</h2>
+          <p class="hint">
+            Tu clase es tu oficio de aventurera: cómo luchas, qué magia usas y
+            en qué destacas.
+          </p>
+        </div>
+        <div class="card-grid" id="classGrid"></div>
+      </section>
 
-  <!-- Modal de detalle -->
-  <div class="modal" id="modal" hidden>
-    <div class="modal-backdrop" data-close></div>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button class="modal-close" data-close aria-label="Cerrar">✕</button>
-      <div id="modalBody"></div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" data-close>Volver</button>
-        <button class="btn btn-primary" id="modalChoose">Elegir</button>
+      <!-- Paso 4: conjuros -->
+      <section class="step" data-step="3">
+        <div class="step-intro">
+          <h2>Tus conjuros</h2>
+          <p class="hint" id="spellIntro">
+            Elige tus trucos y conjuros de nivel 1.
+          </p>
+        </div>
+        <div id="spellPicker"></div>
+      </section>
+
+      <!-- Paso 5: trasfondo -->
+      <section class="step" data-step="4">
+        <div class="step-intro">
+          <h2>Elige tu trasfondo</h2>
+          <p class="hint">
+            Tu trasfondo cuenta qué hacías antes de la aventura y te da
+            habilidades, equipo y un rasgo especial.
+          </p>
+        </div>
+        <div class="card-grid" id="bgGrid"></div>
+      </section>
+
+      <!-- Paso 6: personalidad (opcional) -->
+      <section class="step" data-step="5">
+        <div class="step-intro">
+          <h2>Personalidad</h2>
+          <p class="hint">
+            Opcional. Ideas de tu trasfondo para dar vida al personaje antes de
+            escribir su historia. Pulsa una opción, tira el dado 🎲 o escribe la
+            tuya.
+          </p>
+        </div>
+        <div id="personaBox"></div>
+      </section>
+
+      <!-- Paso 7: retrato -->
+      <section class="step" data-step="6">
+        <div class="step-intro">
+          <h2>Tu retrato</h2>
+          <p class="hint">
+            Crea tu retrato en Picrew (o usa cualquier dibujo tuyo) y súbelo
+            aquí. Saldrá en tu ficha.
+          </p>
+        </div>
+        <div class="picrew-panel" id="picrewPanel">
+          <div class="picrew-preview" id="picrewPreview"></div>
+          <ol class="picrew-steps">
+            <li>
+              <a
+                class="btn btn-primary"
+                href="https://picrew.me/en/image_maker/2795963"
+                target="_blank"
+                rel="noopener"
+                >Abrir el creador de Picrew ↗</a
+              >
+              <p class="hint">
+                Se abre en otra pestaña (Picrew no deja que se muestre dentro de
+                otras webs).
+              </p>
+            </li>
+            <li>
+              Cuando termines, pulsa el botón de descargar de Picrew y guarda la
+              imagen.
+            </li>
+            <li>
+              <label class="btn btn-ghost light upload-btn"
+                >⬆ Subir mi imagen<input
+                  type="file"
+                  id="portraitUpload"
+                  accept="image/*"
+                  hidden
+              /></label>
+              <button
+                type="button"
+                class="btn btn-ghost light"
+                id="portraitRemove"
+                hidden
+              >
+                Quitar imagen
+              </button>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Paso 8: historia -->
+      <section class="step" data-step="7">
+        <div class="scroll-panel">
+          <h2>Tu historia</h2>
+          <p class="hint">
+            Unas líneas bastan. Si te quedas en blanco, prueba a responder
+            alguna de estas preguntas:
+          </p>
+          <ul class="prompts" id="storyPrompts"></ul>
+          <label class="field">
+            <span>Historia del personaje</span>
+            <textarea
+              id="story"
+              rows="10"
+              maxlength="4000"
+              placeholder="Érase una vez…"
+            ></textarea>
+          </label>
+          <div class="counter" id="storyCount">0 / 4000</div>
+        </div>
+      </section>
+
+      <!-- Paso 9: resultado -->
+      <section class="step" data-step="8">
+        <div class="step-intro">
+          <h2>Tu pergamino de personaje</h2>
+          <p class="hint">
+            Revisa que todo esté bien y descárgalo para llevarlo a la mesa.
+          </p>
+          <div class="actions-row">
+            <button class="btn btn-primary" id="downloadPdf">
+              ⬇ Descargar PDF
+            </button>
+            <button class="btn btn-ghost" id="resetAll">
+              Empezar de nuevo
+            </button>
+          </div>
+          <p class="missing" id="missingNote" hidden></p>
+        </div>
+        <div class="sheet-wrap">
+          <div id="sheet" class="sheet"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="nav-footer">
+      <button class="btn btn-ghost" id="prevBtn">← Anterior</button>
+      <div class="selection-summary" id="selectionSummary"></div>
+      <button class="btn btn-primary" id="nextBtn">Siguiente →</button>
+    </footer>
+
+    <p class="credits">
+      Datos de
+      <a href="https://dnd5e.wikidot.com" target="_blank" rel="noopener"
+        >dnd5e.wikidot.com</a
+      >, traducidos al castellano. Contenido de D&amp;D © Wizards of the Coast.
+    </p>
+
+    <!-- Modal de detalle -->
+    <div class="modal" id="modal" hidden>
+      <div class="modal-backdrop" data-close></div>
+      <div
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
+        <button class="modal-close" data-close aria-label="Cerrar">✕</button>
+        <div id="modalBody"></div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" data-close>Volver</button>
+          <button class="btn btn-primary" id="modalChoose">Elegir</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="data.js"></script>
-  <script src="spells.js"></script>
-  <script src="personality.js"></script>
-  <script src="sketch.js"></script>
-  <script src="app.js"></script>
-</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="data.js"></script>
+    <script src="spells.js"></script>
+    <script src="personality.js"></script>
+    <script src="icons.js"></script>
+    <script src="sketch.js"></script>
+    <script src="app.js"></script>
+  </body>
 </html>

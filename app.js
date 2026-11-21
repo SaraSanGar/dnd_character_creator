@@ -114,13 +114,31 @@
     return r.name;
   }
 
+  /* ---------- Iconos e imágenes ---------- */
+  // Clases y trasfondos: icono dibujado. Razas: imagen en img/<id>.(png|jpg|webp); si no existe, la letra.
+  const IMG_EXT = ["png", "jpg", "webp"];
+  window.glyphFallback = (img) => {
+    const i = +img.dataset.try + 1;
+    if (i < IMG_EXT.length) { img.dataset.try = i; img.src = `img/${img.dataset.id}.${IMG_EXT[i]}`; }
+    else { img.parentElement.classList.remove("has-img"); img.remove(); }
+  };
+  function glyphHTML(kind, item) {
+    if ((kind === "class" || kind === "bg") && window.Icons?.has(item.id)) {
+      return `<div class="glyph has-ico" aria-hidden="true">${Icons.svg(item.id)}</div>`;
+    }
+    if (kind === "race") {
+      return `<div class="glyph has-img" aria-hidden="true"><span>${esc(item.glyph)}</span><img src="img/${item.id}.png" data-id="${item.id}" data-try="0" alt="" onerror="glyphFallback(this)"></div>`;
+    }
+    return `<div class="glyph" aria-hidden="true">${esc(item.glyph)}</div>`;
+  }
+
   /* ---------- Cartas ---------- */
   function cardHTML(kind, item, selected, chips) {
     return `
       <button type="button" class="card ${selected ? "selected" : ""}" data-kind="${kind}" data-id="${item.id}">
         ${selected ? '<span class="seal">Elegida</span>' : ""}
         <div class="card-head">
-          <div class="glyph" aria-hidden="true">${esc(item.glyph)}</div>
+          ${glyphHTML(kind, item)}
           <div>
             <div class="card-title">${esc(item.name)}</div>
             <div class="card-en">${esc(item.en)}</div>
@@ -158,7 +176,7 @@
     return list.map((t) => `<p class="trait"><b>${esc(t.n)}.</b> ${esc(t.d)}</p>`).join("");
   }
   function headHTML(item, extra) {
-    return `<div class="modal-head"><div class="glyph" aria-hidden="true">${esc(item.glyph)}</div>
+    return `<div class="modal-head">${glyphHTML(modalCtx?.kind, item)}
       <div><h3 id="modalTitle">${esc(item.name)}</h3><div class="card-en">${esc(item.en)} · ${esc(extra)}</div></div></div>`;
   }
 

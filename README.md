@@ -33,5 +33,7 @@ O desde la terminal: `npx vercel` dentro de la carpeta.
 - `data.js` – razas, clases, trasfondos y equipo inicial
 - `spells.js` – trucos y conjuros de nivel 1 por clase, y reglas de lanzamiento de conjuros
 - `personality.js` – tablas de personalidad de los trasfondos, alineamientos e idiomas
+- `icons.js` – iconos dibujados a mano de clases y trasfondos
+- `img/` – imágenes de las razas (ver `img/LEEME.md`)
 - `sketch.js` – formas «dibujadas a mano» de la ficha en PDF
 - `app.js` – lógica del asistente, cartas y ficha PDF (html2canvas + jsPDF)

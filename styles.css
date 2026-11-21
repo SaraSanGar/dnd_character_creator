@@ -414,3 +414,12 @@ h2::after {
   .spell-group-head { flex-direction: column; gap: 6px; }
   .spell-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Iconos de clase/trasfondo e imágenes de raza ---------- */
+.glyph { position: relative; overflow: hidden; }
+.card .glyph { width: 58px; height: 58px; }
+.glyph.has-ico { background: var(--paper); padding: 5px; color: var(--ink); }
+.glyph .ico { width: 100%; height: 100%; display: block; }
+.ico .hl { fill: var(--mark); }
+.glyph.has-img { background: var(--paper); }
+.glyph.has-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
