@@ -752,7 +752,6 @@
             ${tag("Trasfondo", b ? b.name : "")}
             ${tag("Nivel", "1", "tiny")}
           </div>
-          ${state.player.trim() ? `<p class="sk-player"><span class="sk-lbl">Jugadora:</span> ${esc(state.player.trim())}</p>` : ""}
         </div>
       </header>
 
@@ -961,12 +960,10 @@
   /* ---------- Eventos ---------- */
   function bind() {
     $("#charName").value = state.name;
-    $("#playerName").value = state.player;
     $("#story").value = state.story;
     updateCount();
 
     $("#charName").addEventListener("input", (e) => { state.name = e.target.value; save(); renderStepper(); renderFooter(); });
-    $("#playerName").addEventListener("input", (e) => { state.player = e.target.value; save(); });
     $("#story").addEventListener("input", (e) => { state.story = e.target.value; save(); updateCount(); renderStepper(); });
     $("#charName").addEventListener("keydown", (e) => { if (e.key === "Enter" && stepDone(STEP.name)) goTo(STEP.race); });
 
@@ -1049,7 +1046,7 @@
     $("#resetAll").addEventListener("click", () => {
       if (!confirm("¿Seguro que quieres borrar este personaje y empezar de cero?")) return;
       state = blank(); save();
-      $("#charName").value = ""; $("#playerName").value = ""; $("#story").value = ""; updateCount();
+      $("#charName").value = ""; $("#story").value = ""; updateCount();
       renderGrids(); goTo(0);
     });
     window.addEventListener("resize", () => { if (state.step === STEP.sheet) fitSheet(); });
