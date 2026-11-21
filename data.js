@@ -735,5 +735,43 @@ const SUBCLASSES = {
         spells: "Falsa vida, Rayo nauseabundo",
         feats: [["Entre los muertos", "Conoces Piedad con los moribundos y tienes ventaja contra enfermedades. Los muertos vivientes deben superar una salvación de Sabiduría para atacarte directamente."]] }
     ]
+  },
+  sorcerer: {
+    label: "Origen hechicero",
+    hint: "A nivel 1 eliges de dónde viene tu magia innata. Te da rasgos propios desde el principio.",
+    options: [
+      { id: "draconic", name: "Linaje dracónico", en: "Draconic Bloodline", src: "PHB",
+        intro: "Tu magia innata viene de la magia dracónica mezclada con tu sangre o la de tus antepasados, quizá de un antiguo hechicero que hizo un trato con un dragón.",
+        spells: "—",
+        feats: [["Antepasado dragón", "Eliges un tipo de dragón como antepasado (su tipo de daño se usa en rasgos posteriores). Hablas, lees y escribes dracónico, y duplicas tu bonificador de competencia en pruebas de Carisma al tratar con dragones."], ["Resistencia dracónica", "Tus puntos de golpe máximos aumentan en 1, y en 1 más cada nivel de hechicero. Sin armadura, tu CA es 13 + tu mod. de Destreza gracias a unas finas escamas."]] },
+      { id: "wild", name: "Magia salvaje", en: "Wild Magic", src: "PHB",
+        intro: "Tu magia viene de las fuerzas salvajes del caos que subyacen al orden de la creación: un portal planar, una bendición feérica, la marca de un demonio… o pura casualidad.",
+        spells: "—",
+        feats: [["Oleada de magia salvaje", "Tras lanzar un conjuro de hechicero de nivel 1 o superior, el DM puede pedirte tirar 1d20: con un 1, tiras en la tabla de Oleada de magia salvaje y ocurre un efecto mágico imprevisto."], ["Mareas del caos", "Una vez por descanso largo puedes darte ventaja en una tirada de ataque, prueba o salvación. El DM puede devolvértela haciéndote tirar en la tabla de oleadas."]] },
+      { id: "divine-soul", name: "Alma divina", en: "Divine Soul", src: "Xanathar",
+        intro: "La chispa de tu magia viene de una fuente divina que brilla en tu alma: quizá un antepasado ángel o una antigua profecía.",
+        spells: "Según tu afinidad: Curar heridas (bien), Infligir heridas (mal), Bendición (ley), Perdición (caos) o Protección contra el bien y el mal (neutralidad)",
+        feats: [["Magia divina", "Al aprender trucos o conjuros de hechicero puedes elegirlos también de la lista de clérigo. Además eliges una afinidad y aprendes su conjuro, que no cuenta para tu límite."], ["Favor de los dioses", "Si fallas una salvación o un ataque, puedes tirar 2d4 y sumarlo al resultado. Se recupera con un descanso corto o largo."]] },
+      { id: "shadow", name: "Magia de las sombras", en: "Shadow Magic", src: "Xanathar",
+        intro: "Eres una criatura de sombra: tu magia innata viene del propio Shadowfell. La chispa de vida que te sostiene parece apagada, como si luchara contra la oscuridad de tu alma.",
+        spells: "—",
+        feats: [["Ojos de la oscuridad", "Visión en la oscuridad de 36 m. A nivel 3 aprendes Oscuridad y puedes ver a través de ella si la lanzas con puntos de hechicería."], ["Fuerza de la tumba", "Cuando un daño te deja a 0 puntos de golpe, haces una salvación de Carisma (CD 5 + daño recibido): si la superas, te quedas a 1. No funciona contra daño radiante ni críticos. Una vez por descanso largo."]] },
+      { id: "storm", name: "Hechicería de la tormenta", en: "Storm Sorcery", src: "Xanathar",
+        intro: "Tu magia innata viene del poder del aire elemental: quizá naciste durante un vendaval legendario o desciendes de criaturas del aire como los djinn.",
+        spells: "—",
+        feats: [["Voz del viento", "Hablas, lees y escribes primordial, y con él te entiendes con quienes hablan sus dialectos (acuano, aurano, ígneo y terrano)."], ["Magia tempestuosa", "Justo antes o después de lanzar un conjuro de nivel 1 o superior, puedes usar una acción adicional para volar hasta 3 m sin provocar ataques de oportunidad."]] },
+      { id: "aberrant", name: "Mente aberrante", en: "Aberrant Mind", src: "Tasha",
+        intro: "Una influencia alienígena ha envuelto tu mente con sus tentáculos y te ha dado poder psiónico. ¿Serás un faro de esperanza o una fuente de terror?",
+        spells: "Brazos de Hadar, Susurros disonantes y el truco Esquirla mental (no cuentan para tu límite)",
+        feats: [["Conjuros psiónicos", "Aprendes conjuros adicionales al subir de nivel; no cuentan para tu límite de conjuros conocidos."], ["Habla telepática", "Como acción adicional creas una conexión telepática con una criatura que veas a 9 m, durante tantos minutos como tu nivel de hechicero."]] },
+      { id: "clockwork", name: "Alma mecánica", en: "Clockwork Soul", src: "Tasha",
+        intro: "La fuerza cósmica del orden te ha llenado de magia. Ese poder viene de Mecanus, un plano moldeado por una eficiencia de relojería.",
+        spells: "Alarma, Protección contra el bien y el mal (no cuentan para tu límite)",
+        feats: [["Magia mecánica", "Aprendes conjuros adicionales al subir de nivel. Además, eliges cómo se manifiesta el orden cuando lanzas conjuros."], ["Restaurar el equilibrio", "Cuando una criatura a 18 m va a tirar un d20 con ventaja o desventaja, usas tu reacción para anularlas. Tantas veces como tu bonificador de competencia por descanso largo."]] },
+      { id: "lunar", name: "Hechicería lunar", en: "Lunar Sorcery", src: "Dragonlance",
+        intro: "Tú o alguien de tu linaje recibisteis la magia concentrada de la luna (o las lunas) de tu mundo. Tu conexión con ella se nota al lanzar conjuros.",
+        spells: "Escudo (luna llena), Rayo nauseabundo (luna nueva), Rociada de color (luna creciente)",
+        feats: [["Encarnación lunar", "Aprendes conjuros lunares extra. Tras cada descanso largo eliges una fase (llena, nueva o creciente) y puedes lanzar gratis una vez su conjuro de nivel 1."], ["Fuego lunar", "Aprendes Llama sagrada (no cuenta para tu límite) y puedes lanzarla contra dos criaturas que estén a 1,5 m entre sí."]] }
+    ]
   }
 };

@@ -260,7 +260,7 @@
         const o = sc.options.find((x) => x.id === modalCtx.subclass);
         if (o) {
           html += `<div class="sub-detail"><p class="trait"><i>${esc(o.intro)}</i></p>
-            <p class="trait"><b>Conjuros de nivel 1.</b> ${esc(o.spells)}</p>
+            ${o.spells && o.spells !== "—" ? `<p class="trait"><b>Conjuros adicionales.</b> ${esc(o.spells)}</p>` : ""}
             ${o.feats.map(([n2, d]) => `<p class="trait"><b>${esc(n2)}.</b> ${esc(d)}</p>`).join("")}</div>`;
         } else if (ready) { ready = false; warn = `Elige tu ${sc.label.toLowerCase()} para continuar.`; }
       }
@@ -759,7 +759,7 @@
       </div>
       ${sc ? `<div class="sheet-section">
         <h4>${esc(SUBCLASSES[c.id].label)}: ${esc(sc.name)}</h4>
-        <p class="trait"><b>Conjuros de nivel 1.</b> ${esc(sc.spells)}</p>
+        ${sc.spells && sc.spells !== "—" ? `<p class="trait"><b>Conjuros adicionales.</b> ${esc(sc.spells)}</p>` : ""}
         ${sc.feats.map(([n2, d]) => `<p class="trait"><b>${esc(n2)}.</b> ${esc(d)}</p>`).join("")}
       </div>` : ""}
       <div class="sheet-section">
