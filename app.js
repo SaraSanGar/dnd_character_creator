@@ -17,7 +17,7 @@
   const blank = () => ({ step: 0, name: "", player: "", race: null, subrace: null, raceChoice: null, cls: null, equip: [], skills: [], subclass: null,
     spells: { cantrips: [], lvl1: [], race: null }, bg: null,
     persona: { traits: ["", ""], ideal: "", bond: "", flaw: "", alignment: null, languages: [] },
-    avatar: null, story: "" });
+    avatar: null, portraitImg: null, portraitMode: "picrew", story: "" });
   let state = load() || blank();
 
   const $ = (sel) => document.querySelector(sel);
@@ -54,7 +54,7 @@
       case STEP.spells: return !!state.cls && spellsComplete();
       case STEP.bg: return !!state.bg;
       case STEP.persona: return personaFilled();
-      case STEP.portrait: return !!state.avatar;
+      case STEP.portrait: return !!(state.portraitImg || state.avatar);
       case STEP.story: return state.story.trim().length > 0;
       default: return false;
     }
@@ -570,7 +570,9 @@
     </section>`;
 
     $("#personaBox").innerHTML = html;
+    document.querySelectorAll(".persona-input").forEach(autoGrow);
   }
+  function autoGrow(ta) { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 4 + "px"; }
   const langBtn = (l) => `<button type="button" class="lang ${state.persona.languages.includes(l) ? "selected" : ""}" data-lang="${esc(l)}">${esc(l)}</button>`;
 
   function setPersona(cat, text, idx) {
@@ -640,6 +642,15 @@
   }
 
   function renderPortrait() {
+    const mode = state.portraitMode === "draw" ? "draw" : "picrew";
+    document.querySelectorAll("[data-pmode]").forEach((b) => b.classList.toggle("active", b.dataset.pmode === mode));
+    $("#picrewPanel").hidden = mode !== "picrew";
+    $("#drawPanel").hidden = mode !== "draw";
+    $("#picrewPreview").innerHTML = state.portraitImg
+      ? `<img src="${state.portraitImg}" alt="Tu retrato">`
+      : `<span>Aquí aparecerá tu imagen</span>`;
+    $("#portraitRemove").hidden = !state.portraitImg;
+    if (mode !== "draw") return;
     const cfg = avatarCfg();
     save();
     $("#avatarPreview").innerHTML = Avatar.render(cfg);
@@ -673,6 +684,28 @@
     } catch (err) { console.error(err); alert("No se pudo crear la imagen."); }
   }
 
+  // Reduce la imagen subida para que quepa en el navegador y en el PDF
+  function loadPortraitFile(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 700, k = Math.min(1, max / Math.max(img.width, img.height));
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+        const ctx = cv.getContext("2d");
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        state.portraitImg = cv.toDataURL("image/jpeg", 0.9);
+        save(); renderPortrait(); renderStepper();
+      };
+      img.onerror = () => alert("No se pudo leer esa imagen.");
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   const fileSlug = () => (state.name.trim() || "personaje").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "personaje";
 
   /* ---------- Equipo inicial ---------- */
@@ -693,125 +726,195 @@
     return eq.items.map((item, i) => (Array.isArray(item) ? item[norm[i]] : item));
   }
 
-  /* ---------- Hoja final ---------- */
-  function sheetHTML(portraitPng) {
+  /* ---------- Ficha estilo boceto ---------- */
+  const PAGE_W = 794, PAGE_H = 1123;
+  const SKILL_ORDER = ["Atletismo", "Acrobacias", "Juego de manos", "Sigilo", "Arcanos", "Historia", "Investigación", "Naturaleza", "Religión", "Medicina", "Percepción", "Perspicacia", "Supervivencia", "Trato con animales", "Engaño", "Interpretación", "Intimidación", "Persuasión"];
+  const ABILITIES = [["Fuerza", "circle"], ["Destreza", "triangle"], ["Constitución", "rect"], ["Inteligencia", "pentagon"], ["Sabiduría", "diamond"], ["Carisma", "star"]];
+
+  function sheetData() {
     const r = findRace(state.race), c = findClass(state.cls), b = findBg(state.bg);
     const sub = r?.subraces?.find((s) => s.id === state.subrace);
     const ch = r?.choices?.find((x) => x.id === state.raceChoice);
-    const name = state.name.trim() || "Sin nombre";
     const sc = c ? subclassInfo() : null;
-
-    // Resumen de habilidades competentes (sin repetir) y avisos de duplicados
-    const skillSrc = {};
-    const addSk = (list, src) => list.forEach((k) => (skillSrc[k] = skillSrc[k] || []).push(src));
-    addSk(raceSkills(), "raza"); addSk(state.skills, "clase"); addSk(bgSkills(), "trasfondo");
-    const skillNames = Object.keys(skillSrc).sort((a, b) => a.localeCompare(b, "es"));
-    const dupes = skillNames.filter((k) => skillSrc[k].length > 1);
-    const skillsBlock = skillNames.length ? `
-      <div class="sheet-section">
-        <h4>Habilidades competentes</h4>
-        <ul class="sheet-skills">${skillNames.map((k) => `<li><b>${esc(k)}</b> <span>(${esc((SKILLS.find((x) => x[0] === k) || [, ""])[1])})</span></li>`).join("")}</ul>
-        ${dupes.length ? `<p class="trait note">⚠ ${esc(dupes.join(", "))} ${dupes.length > 1 ? "se repiten" : "se repite"}: puedes cambiar la repetida por otra habilidad (habla con tu DM).</p>` : ""}
-      </div>` : "";
-
-    const p = state.persona;
-    const al = ALIGNMENTS.find((a) => a[0] === p.alignment);
-    const pRows = [
-      ["Alineamiento", al ? al[1] : ""],
-      ["Idiomas", p.languages.join(", ")],
-      ["Rasgos", p.traits.filter((t) => t.trim()).join(" · ")],
-      ["Ideal", p.ideal], ["Vínculo", p.bond], ["Defecto", p.flaw]
-    ].filter(([, v]) => v && v.trim());
-    const personaBlock = pRows.length ? `
-      <div class="sheet-section">
-        <h4>Personalidad</h4>
-        <dl class="persona-dl">${pRows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
-      </div>` : "";
-
-    const portrait = state.avatar
-      ? `<div class="sheet-portrait">${portraitPng ? `<img src="${portraitPng}" alt="">` : Avatar.render(state.avatar)}</div>` : "";
-
-    const raceBlock = r ? `
-      <div class="sheet-section">
-        <h4>Rasgos de ${esc(r.name.toLowerCase())}</h4>
-        <dl>
-          <dt>Características</dt><dd>${esc(r.asi)}${sub && sub.asi !== r.asi ? `; ${esc(sub.asi)}` : ""}</dd>
-          <dt>Tamaño</dt><dd>${esc(r.size)}</dd>
-          <dt>Velocidad</dt><dd>${esc(r.speed)}</dd>
-          ${ch ? `<dt>${esc(r.choiceLabel)}</dt><dd>${esc(ch.name)}: ${esc(ch.d)}</dd>` : ""}
-        </dl>
-        <div style="margin-top:8px">${traitsHTML(r.traits)}${sub ? traitsHTML(sub.traits) : ""}</div>
-      </div>` : "";
-
-    const classBlock = c ? `
-      <div class="sheet-section">
-        <h4>Clase: ${esc(c.name)}</h4>
-        <dl>
-          <dt>Principal</dt><dd>${esc(c.primary)}</dd>
-          <dt>Dado de golpe</dt><dd>${esc(c.hitDie)}</dd>
-          <dt>Salvaciones</dt><dd>${esc(c.saves)}</dd>
-          <dt>Armaduras</dt><dd>${esc(c.armor)}</dd>
-          <dt>Armas</dt><dd>${esc(c.weapons)}</dd>
-          <dt>Herramientas</dt><dd>${esc(c.tools)}</dd>
-          <dt>Habilidades</dt><dd>${esc(state.skills.length ? state.skills.join(", ") : c.skills)}</dd>
-          <dt>Nivel 1</dt><dd>${esc(c.features.join(", "))}</dd>
-        </dl>
-      </div>
-      ${sc ? `<div class="sheet-section">
-        <h4>${esc(SUBCLASSES[c.id].label)}: ${esc(sc.name)}</h4>
-        ${sc.spells && sc.spells !== "—" ? `<p class="trait"><b>Conjuros adicionales.</b> ${esc(sc.spells)}</p>` : ""}
-        ${sc.feats.map(([n2, d]) => `<p class="trait"><b>${esc(n2)}.</b> ${esc(d)}</p>`).join("")}
-      </div>` : ""}
-      <div class="sheet-section">
-        <h4>Equipo de ${esc(c.name.toLowerCase())}</h4>
-        <ul class="sheet-list">${chosenEquipment(c.id, state.equip).map((e) => `<li>${esc(e)}</li>`).join("")}</ul>
-      </div>` : "";
-
-    const bgBlock = b ? `
-      <div class="sheet-section">
-        <h4>Trasfondo: ${esc(b.name)}</h4>
-        <dl>
-          <dt>Habilidades</dt><dd>${esc(b.skills)}</dd>
-          <dt>Herramientas</dt><dd>${esc(b.tools)}</dd>
-          <dt>Idiomas</dt><dd>${esc(b.languages)}</dd>
-          <dt>Equipo</dt><dd>${esc(b.equipment)}</dd>
-        </dl>
-        <p class="trait" style="margin-top:6px"><b>${esc(b.feature.n)}.</b> ${esc(b.feature.d)}</p>
-      </div>` : "";
-
-    return `
-      <div class="frame"></div>
-      <span class="corner tl">❦</span><span class="corner tr">❦</span><span class="corner bl">❦</span><span class="corner br">❦</span>
-      <div class="sheet-head ${portrait ? "with-portrait" : ""}">
-        ${portrait}
-        <div class="sheet-title">
-        <div class="kicker">Pergamino de aventurera</div>
-        <h1>${esc(name)}</h1>
-        <div class="subtitle">${[r && raceLabel(), c?.name, b?.name].filter(Boolean).map(esc).join(" · ") || "&nbsp;"}</div>
-        ${state.player.trim() ? `<div class="subtitle" style="font-size:12px;margin-top:2px">Jugadora: ${esc(state.player.trim())}</div>` : ""}
-        <div class="divider">✦ ─────── ❧ ─────── ✦</div>
-        </div>
-      </div>
-      <div class="sheet-trio">
-        <div class="sheet-box"><div class="label">Raza</div><div class="value">${r ? esc(r.name) : "—"}<small>${sub && r.subraces.length > 1 ? esc(sub.name) : ch ? "Dragón " + esc(ch.name.toLowerCase()) : r ? esc(r.en) : ""}</small></div></div>
-        <div class="sheet-box"><div class="label">Clase</div><div class="value">${c ? esc(c.name) : "—"}<small>${c ? (sc ? esc(sc.name) + " · " : "") + "Nivel 1 · d" + esc(c.hitDie.slice(1)) : ""}</small></div></div>
-        <div class="sheet-box"><div class="label">Trasfondo</div><div class="value">${b ? esc(b.name) : "—"}<small>${b ? esc(b.en) : ""}</small></div></div>
-      </div>
-      <div class="sheet-cols">
-        <div>${raceBlock}${skillsBlock}</div>
-        <div>${classBlock}${bgBlock}</div>
-      </div>
-      ${sheetSpellsHTML()}
-      ${personaBlock}
-      <div class="sheet-section" style="margin-top:6px">
-        <h4>Historia</h4>
-        <div class="sheet-story">${esc(state.story.trim()) || "<i>Aún por escribir…</i>"}</div>
-      </div>
-      <div class="sheet-foot">Datos de dnd5e.wikidot.com · Forja de Héroes</div>`;
+    const profSkills = new Set([...raceSkills(), ...state.skills, ...bgSkills()]);
+    const info = spellInfo();
+    const classSpells = info && !info.later ? state.spells : { cantrips: [], lvl1: [] };
+    const raceCantrip = raceSpellPick() && state.spells.race ? [state.spells.race] : [];
+    const raceTraits = r ? [...r.traits.filter((t) => t.n !== "Idiomas"), ...(sub ? sub.traits : [])] : [];
+    if (ch) raceTraits.unshift({ n: r.choiceLabel, d: `${ch.name}: ${ch.d}` });
+    const langs = state.persona.languages.length ? state.persona.languages.join(", ")
+      : [r?.traits.find((t) => t.n === "Idiomas")?.d, b && b.languages !== "Ninguno" ? b.languages + " (trasfondo)" : ""].filter(Boolean).join(" ");
+    return { r, c, b, sub, ch, sc, profSkills, info, classSpells, raceCantrip, raceTraits, langs };
   }
 
-  function renderSheet() {
-    $("#sheet").innerHTML = sheetHTML();
+  const shape = (s, cls = "", inner = "", extra = "") => `<div class="sk-shape ${cls}" data-shape="${s}" ${extra}>${inner}</div>`;
+
+  function portraitHTML(forPdf, png) {
+    const drawn = () => (forPdf && png ? `<img src="${png}" alt="">` : Avatar.render(state.avatar));
+    if (state.portraitMode === "draw" && state.avatar) return drawn();
+    if (state.portraitImg) return `<img src="${state.portraitImg}" alt="">`;
+    if (state.avatar) return drawn();
+    return `<span class="sk-hint">retrato</span>`;
+  }
+
+  function page1HTML(d, forPdf, png) {
+    const { r, c, b, sc } = d;
+    const name = state.name.trim();
+    const hitMax = c ? c.hitDie.slice(1) : "";
+    const speed = r ? r.speed.split(" (")[0].split(";")[0] : "";
+    const spellsList = [...d.classSpells.cantrips.map((s) => [s, "truco"]), ...d.raceCantrip.map((s) => [s, "truco"]), ...d.classSpells.lvl1.map((s) => [s, "nv 1"])];
+    const traitNames = [
+      ...d.raceTraits.map((t) => t.n),
+      ...(c ? c.features : []),
+      ...(sc ? sc.feats.map((f) => f[0]) : []),
+      ...(b ? [b.feature.n] : [])
+    ];
+    const tools = [c && c.tools !== "Ninguna" ? c.tools : "", b && b.tools !== "Ninguna" ? b.tools : ""].filter(Boolean).join("; ");
+    const inventory = [...(c ? chosenEquipment(c.id, state.equip) : []), ...(b ? [b.equipment] : [])];
+    const raceAsi = r ? r.asi + (d.sub && d.sub.asi !== r.asi ? "; " + d.sub.asi : "") : "";
+
+    return `<div class="sk-page sk-p1">
+      ${shape("rect", "sk-portrait", portraitHTML(forPdf, png))}
+      <div class="sk-top">
+        <div class="sk-row1">
+          ${shape("sparkle", "sk-lv", `<span class="sk-lbl">Lv</span><b>1</b>`)}
+          ${shape("banner", "sk-name", `<span class="sk-lbl">Nombre:</span><b>${esc(name)}</b>`)}
+        </div>
+        <div class="sk-row2">
+          ${shape("blob", "sk-race", `<span class="sk-lbl">Raza</span><b>${esc(r ? raceLabel() : "")}</b>`)}
+          ${shape("burst", "sk-bg", `<span class="sk-lbl">Trasfondo</span><b>${esc(b ? b.name : "")}</b>`)}
+        </div>
+        <div class="sk-row3">
+          ${shape("scroll", "sk-class", `<span class="sk-lbl">Clase</span><b>${esc(c ? c.name : "")}</b>${sc ? `<small>${esc(sc.name)}</small>` : ""}`)}
+          ${state.player.trim() ? `<div class="sk-player"><span class="sk-lbl">Jugadora:</span> ${esc(state.player.trim())}</div>` : ""}
+        </div>
+      </div>
+
+      <div class="sk-abilities">
+        ${ABILITIES.map(([n, s]) => `<div class="sk-ab">${shape(s, "sk-ab-shape", "")}<span class="sk-ab-name">${n}</span></div>`).join("")}
+        ${raceAsi ? `<p class="sk-note">Raza: ${esc(raceAsi)}</p>` : ""}
+      </div>
+
+      <div class="sk-mid">
+        <div class="sk-inspo">
+          <div class="sk-mini">${shape("sparkle", "sk-spark", "")}<span>Inspiración</span></div>
+          <div class="sk-mini">${shape("sparkle", "sk-spark", "")}<span>Proficiencia <b class="sk-prof">+2</b></span></div>
+        </div>
+        ${shape("rect", "sk-skills", `<ul>${SKILL_ORDER.map((sk) => `<li class="${d.profSkills.has(sk) ? "on" : ""}"><i class="dot"></i><span class="blank"></span>${esc(sk)}</li>`).join("")}</ul>`)}
+      </div>
+
+      <div class="sk-right">
+        <div class="sk-stats">
+          <div class="sk-stat">${shape("shield", "sk-st", "")}<span>Armadura</span></div>
+          <div class="sk-stat">${shape("heart", "sk-st", c ? `<small>${hitMax} + CON</small>` : "")}<span>Vida</span></div>
+          <div class="sk-stat">${shape("splat", "sk-st", "")}<span>¡Iniciativa!</span></div>
+          <div class="sk-stat">${shape("boot", "sk-st", `<b>${esc(speed)}</b>`)}<span>Velocidad</span></div>
+        </div>
+        <div class="sk-row-saves">
+          <div class="sk-death"><span class="sk-lbl">Salvación de muerte</span>
+            <div>éxitos ${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}</div>
+            <div>fallos ${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}${shape("circle", "sk-dot")}</div>
+          </div>
+          ${shape("sword", "sk-dice", `<b>1${esc(c ? c.hitDie : "")}</b><span class="sk-lbl">Dado</span>`)}
+        </div>
+        ${shape("rect", "sk-box sk-attacks", `<h3>Ataques y hechizos</h3>
+          ${d.info && !d.info.later ? `<p class="sk-small">Espacios de nivel 1: ${d.info.slots} · ${esc(d.info.ability)}</p>` : ""}
+          <ul>${spellsList.map(([s, t]) => `<li>${esc(SPELLS[s].es)} <em>(${t})</em></li>`).join("") || '<li class="sk-empty">—</li>'}</ul>`)}
+        ${shape("rect", "sk-box sk-traits", `<h3 class="sk-vert">Rasgos</h3><ul>${traitNames.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`)}
+      </div>
+
+      ${shape("rect", "sk-box sk-comp", `<h3>Competencias</h3>
+        <p><b>Salvaciones:</b> ${esc(c ? c.saves : "")}</p>
+        <p><b>Armaduras:</b> ${esc(c ? c.armor : "")}</p>
+        <p><b>Armas:</b> ${esc(c ? c.weapons : "")}</p>
+        ${tools ? `<p><b>Herramientas:</b> ${esc(tools)}</p>` : ""}
+        <p><b>Idiomas:</b> ${esc(d.langs)}</p>`)}
+      ${shape("rect", "sk-box sk-inv", `${shape("banner", "sk-inv-title", "<h3>Inventario</h3>")}<ul>${inventory.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`)}
+    </div>`;
+  }
+
+  // Bloques de las páginas de detalle: [título de sección, [html de cada elemento]]
+  function detailSections(d) {
+    const out = [];
+    const story = state.story.trim();
+    if (story) out.push(["Historia", story.split(/\n\s*\n/).map((p) => `<p class="sk-story">${esc(p)}</p>`)]);
+    const p = state.persona;
+    const al = ALIGNMENTS.find((a) => a[0] === p.alignment);
+    const pr = [["Alineamiento", al ? al[1] : ""], ["Rasgos", p.traits.filter((t) => t.trim()).join(" · ")], ["Ideal", p.ideal], ["Vínculo", p.bond], ["Defecto", p.flaw]].filter(([, v]) => v && v.trim());
+    if (pr.length) out.push(["Personalidad", pr.map(([k, v]) => `<p><b>${esc(k)}:</b> ${esc(v)}</p>`)]);
+    const traits = [
+      ...d.raceTraits.map((t) => [t.n, t.d]),
+      ...(d.sc ? d.sc.feats : []),
+      ...(d.sc && d.sc.spells && d.sc.spells !== "—" ? [["Conjuros adicionales (" + d.sc.name + ")", d.sc.spells]] : []),
+      ...(d.b ? [[d.b.feature.n + " (trasfondo)", d.b.feature.d]] : [])
+    ];
+    if (traits.length) out.push(["Rasgos en detalle", traits.map(([n, t]) => `<p><b>${esc(n)}.</b> ${esc(t)}</p>`)]);
+    const spells = [...d.classSpells.cantrips, ...d.raceCantrip, ...d.classSpells.lvl1];
+    if (spells.length) {
+      const head = d.info && !d.info.later ? [`<p class="sk-small">CD de salvación = 8 + 2 + mod. de ${esc(d.info.ability)} · Ataque de conjuro = 2 + mod. de ${esc(d.info.ability)}</p>`] : [];
+      out.push(["Conjuros", head.concat(spells.map((s) => {
+        const sp = SPELLS[s];
+        return `<p><b>${esc(sp.es)}</b> <em>(${esc(sp.en)}${sp.lvl === 0 ? ", truco" : ", nivel 1"})</em> — ${esc(sp.time)} · ${esc(sp.range)} · ${esc(sp.dur)}. ${esc(sp.d)}</p>`;
+      }))]);
+    }
+    return out;
+  }
+
+  function newDetailPage(container) {
+    const pg = document.createElement("div");
+    pg.className = "sk-page sk-pn";
+    pg.innerHTML = `<div class="sk-pn-head"><b>${esc(state.name.trim() || "Personaje")}</b> <span>· detalles</span></div><div class="sk-flow"></div>`;
+    container.appendChild(pg);
+    return pg.querySelector(".sk-flow");
+  }
+
+  // Construye todas las páginas dentro de container y reparte los bloques sin cortarlos
+  async function buildSheet(container, forPdf) {
+    let png = null;
+    if (forPdf && state.avatar && (state.portraitMode === "draw" || !state.portraitImg)) { try { png = await Avatar.toPng(state.avatar, 600); } catch (e) { console.warn(e); } }
+    // Las fuentes manuscritas solo se descargan al usarse: se fuerzan antes de medir
+    if (document.fonts?.load) {
+      try {
+        await Promise.all(['15px "Patrick Hand"', '15px "Gloria Hallelujah"'].map((f) => document.fonts.load(f)));
+        await document.fonts.ready;
+      } catch { /* sin fuentes, se usa la de reserva */ }
+    }
+    const d = sheetData();
+    container.innerHTML = page1HTML(d, forPdf, png);
+    const sections = detailSections(d);
+    if (sections.length) {
+      let flow = newDetailPage(container);
+      const fits = () => flow.scrollHeight <= flow.clientHeight + 1;
+      for (const [title, items] of sections) {
+        let box = null;
+        const openBox = (cont) => {
+          box = document.createElement("div");
+          box.className = "sk-shape sk-sec";
+          box.dataset.shape = "rect";
+          box.innerHTML = `<h3>${esc(title)}${cont ? " (cont.)" : ""}</h3>`;
+          flow.appendChild(box);
+        };
+        openBox(false);
+        if (!fits()) { box.remove(); flow = newDetailPage(container); openBox(false); }
+        for (const html of items) {
+          const tmp = document.createElement("div");
+          tmp.innerHTML = html;
+          const el = tmp.firstElementChild;
+          box.appendChild(el);
+          if (!fits()) {
+            el.remove();
+            if (box.children.length <= 1) box.remove();
+            flow = newDetailPage(container);
+            openBox(true);
+            box.appendChild(el);
+          }
+        }
+      }
+    }
+    Sketch.apply(container);
+  }
+
+  async function renderSheet() {
     const missing = [];
     if (!state.name.trim()) missing.push("nombre");
     if (!raceComplete()) missing.push("raza");
@@ -823,6 +926,9 @@
     const note = $("#missingNote");
     note.hidden = missing.length === 0;
     note.textContent = missing.length ? `Te falta: ${missing.join(", ")}. Puedes descargarlo igualmente o volver atrás.` : "";
+    const sheet = $("#sheet");
+    sheet.style.transform = "";
+    await buildSheet(sheet, false);
     fitSheet();
   }
 
@@ -830,56 +936,53 @@
   function fitSheet() {
     const wrap = $(".sheet-wrap"), sheet = $("#sheet");
     if (!wrap || !sheet) return;
-    sheet.style.transform = ""; sheet.style.transformOrigin = ""; wrap.style.height = "";
+    sheet.style.transform = ""; wrap.style.height = "";
     const avail = wrap.clientWidth - 8;
-    if (avail < 794) {
-      const k = avail / 794;
+    if (avail > 0 && avail < PAGE_W) {
+      const k = avail / PAGE_W;
       sheet.style.transformOrigin = "top left";
       sheet.style.transform = `scale(${k})`;
-      sheet.style.marginLeft = "4px";
       wrap.style.height = sheet.offsetHeight * k + 30 + "px";
-    } else {
-      sheet.style.marginLeft = "";
     }
   }
 
   async function downloadPdf() {
     const btn = $("#downloadPdf");
-    if (typeof html2pdf === "undefined") {
+    if (typeof html2canvas === "undefined" || !window.jspdf) {
       alert("No se pudo cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.");
       return;
     }
     btn.disabled = true;
     const label = btn.textContent;
-    btn.textContent = "Inscribiendo el pergamino…";
+    btn.textContent = "Dibujando la ficha…";
 
-    // Clon sin escalar fuera de pantalla para exportar a tamaño A4 real
+    // Se monta a tamaño real en la esquina (0,0), detrás de la página, para que la captura no salga desplazada
     const holder = document.createElement("div");
-    holder.style.cssText = "position:fixed;left:-10000px;top:0;";
-    const clone = document.createElement("div");
-    clone.className = "sheet exporting";
-    let png = null;
-    try { if (state.avatar) png = await Avatar.toPng(state.avatar, 500); } catch (e) { console.warn(e); }
-    clone.innerHTML = sheetHTML(png);
-    holder.appendChild(clone);
+    holder.className = "sk-export";
+    const overlay = document.createElement("div");
+    overlay.className = "sk-overlay";
+    overlay.innerHTML = "<p>✎ Dibujando la ficha…</p>";
+    const y = window.scrollY;
     document.body.appendChild(holder);
-
+    document.body.appendChild(overlay);
+    window.scrollTo(0, 0);
     try {
-      if (document.fonts?.ready) await document.fonts.ready;
-      const fname = fileSlug();
-      await html2pdf().set({
-        margin: 0,
-        filename: `${fname}.pdf`,
-        image: { type: "jpeg", quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#f6ead0", windowWidth: 794 },
-        jsPDF: { unit: "px", format: [794, 1123], orientation: "portrait", hotfixes: ["px_scaling"] },
-        pagebreak: { mode: ["css", "avoid-all"], avoid: [".sheet-section", ".sheet-box", ".trait"] }
-      }).from(clone).save();
+      await buildSheet(holder, true);
+      const pdf = new window.jspdf.jsPDF({ unit: "px", format: [PAGE_W, PAGE_H], orientation: "portrait", hotfixes: ["px_scaling"] });
+      const pages = [...holder.querySelectorAll(".sk-page")];
+      for (let i = 0; i < pages.length; i++) {
+        const canvas = await html2canvas(pages[i], { scale: 2, backgroundColor: "#ffffff", useCORS: true, scrollX: 0, scrollY: 0, windowWidth: PAGE_W, width: PAGE_W, height: PAGE_H });
+        if (i > 0) pdf.addPage([PAGE_W, PAGE_H], "portrait");
+        pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, PAGE_W, PAGE_H);
+      }
+      pdf.save(`${fileSlug()}.pdf`);
     } catch (err) {
       console.error(err);
       alert("Algo falló al crear el PDF. Inténtalo otra vez.");
     } finally {
       holder.remove();
+      overlay.remove();
+      window.scrollTo(0, y);
       btn.disabled = false;
       btn.textContent = label;
     }
@@ -960,6 +1063,7 @@
       if (!ta) return;
       const cat = ta.dataset.cat;
       if (cat === "traits") state.persona.traits[+ta.dataset.idx] = ta.value; else state.persona[cat] = ta.value;
+      autoGrow(ta);
       save(); renderStepper();
       // refleja qué opción coincide sin perder el foco
       ta.closest(".persona-card").querySelectorAll(".persona-opt").forEach((b) => {
@@ -988,6 +1092,11 @@
       Object.assign(avatarCfg(), Avatar.RACE_HINTS[state.race] || {}); save(); renderPortrait();
     });
     $("#avatarPng").addEventListener("click", downloadAvatarPng);
+    document.querySelectorAll("[data-pmode]").forEach((b) => b.addEventListener("click", () => {
+      state.portraitMode = b.dataset.pmode; save(); renderPortrait(); renderStepper();
+    }));
+    $("#portraitUpload").addEventListener("change", (e) => { loadPortraitFile(e.target.files[0]); e.target.value = ""; });
+    $("#portraitRemove").addEventListener("click", () => { state.portraitImg = null; save(); renderPortrait(); renderStepper(); });
 
     $("#downloadPdf").addEventListener("click", downloadPdf);
     $("#resetAll").addEventListener("click", () => {

@@ -423,6 +423,14 @@
 
   // Convierte el SVG a PNG (data URL) para el PDF y para descargar
   function toPng(cfg, size = 600) {
+    // canvg pinta el SVG con trazos de canvas, sin «manchar» el lienzo (necesario en Safari)
+    if (window.canvg?.Canvg) {
+      const canvas = document.createElement("canvas");
+      canvas.width = size; canvas.height = Math.round(size * H / W);
+      const ctx = canvas.getContext("2d");
+      const v = window.canvg.Canvg.fromString(ctx, render(cfg, { size }), { ignoreMouse: true, ignoreAnimation: true });
+      return v.render().then(() => canvas.toDataURL("image/png"));
+    }
     return new Promise((resolve, reject) => {
       const svg = render(cfg, { size });
       const img = new Image();

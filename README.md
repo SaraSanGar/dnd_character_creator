@@ -34,4 +34,5 @@ O desde la terminal: `npx vercel` dentro de la carpeta.
 - `spells.js` – trucos y conjuros de nivel 1 por clase, y reglas de lanzamiento de conjuros
 - `personality.js` – tablas de personalidad de los trasfondos, alineamientos e idiomas
 - `avatar.js` – creador de retratos (dibujos SVG propios por capas)
-- `app.js` – lógica del asistente, cartas y PDF (html2pdf.js)
+- `sketch.js` – formas «dibujadas a mano» de la ficha en PDF
+- `app.js` – lógica del asistente, cartas y ficha PDF (html2canvas + jsPDF + canvg)
